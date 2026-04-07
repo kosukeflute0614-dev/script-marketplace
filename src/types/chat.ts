@@ -20,8 +20,8 @@ export type MessageDoc = {
   type: MessageType;
   /** type=text の場合のみ意味を持つ */
   text?: string;
-  /** type=hearingSheetResponse の場合 */
-  hearingSheetData?: Record<string, string>;
+  /** type=hearingSheetResponse の場合（配列形式・order 順） */
+  hearingSheetData?: { question: string; answer: string; order: number }[];
   /** type=invoice の場合 */
   invoiceId?: string;
   createdAt: Timestamp | Date;

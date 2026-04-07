@@ -37,13 +37,35 @@ export function MessageBubble({ message, isMine }: Props) {
       </div>
     );
   }
-  // hearingSheetResponse / invoice などの特殊メッセージ（後続 Step で本実装）
+  // hearingSheetResponse: 質問と回答のペアを表示（order 順）
+  if (message.type === "hearingSheetResponse") {
+    const entries = (message.hearingSheetData ?? []).slice().sort((a, b) => a.order - b.order);
+    return (
+      <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
+        <div className="border-border bg-card max-w-[85%] rounded-lg border px-4 py-3 text-xs">
+          <p className="text-foreground mb-2 text-sm font-medium">ヒアリングシートの回答</p>
+          {entries.length === 0 ? (
+            <p className="text-muted-foreground">（回答なし）</p>
+          ) : (
+            <ul className="space-y-2">
+              {entries.map((e) => (
+                <li key={e.order}>
+                  <p className="text-muted-foreground">{e.order}. {e.question}</p>
+                  <p className="text-foreground">{e.answer}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // invoice (後続 P1-step で本実装)
   return (
     <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
       <div className="border-border bg-muted text-muted-foreground max-w-[75%] rounded-lg border px-3 py-2 text-xs">
-        {message.type === "hearingSheetResponse"
-          ? "ヒアリングシートの回答（後続 Step で表示対応）"
-          : "請求カード（後続 Step で表示対応）"}
+        請求カード（Pass2 で表示対応）
       </div>
     </div>
   );

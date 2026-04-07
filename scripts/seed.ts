@@ -578,7 +578,7 @@ async function seedChatsAndConsultations(db: Firestore) {
       requesterUid: c.consultation.requesterUid,
       authorUid: c.consultation.authorUid,
       chatId: c.id,
-      hearingSheetData: {},
+      hearingSheetData: [],
       status: c.consultation.statuses,
       createdAt: new Date(Date.now() - 3 * 86400 * 1000),
     });
