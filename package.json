@@ -40,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.5.14",
     "eslint-config-prettier": "^10.1.8",
+    "pdf-lib": "^1.17.1",
     "playwright": "^1.59.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",

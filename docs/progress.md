@@ -3,10 +3,29 @@
 ## 現在のステータス
 
 **Pass**: Pass 1（APIキー受領前の作業）
-**Step**: P1-2 完了。フェーズ1（基盤構築）完了。次は P1-3「seed スクリプト」
+**Step**: P1-3 完了。次は P1-4「Step 12 チャット基盤」
 **開発計画書**: `docs/development-plan.md`
 
 ## 直近の作業内容（2026-04-07）
+
+### Pass 1 P1-3: 開発用 seed スクリプト（完了）
+
+- ✅ `scripts/seed.ts` — 全コレクション (config/users/userIds/scripts(+versions)/chats(+messages)/consultations/invoices/purchases/favorites/history) を冪等に投入
+- ✅ pdf-lib で英語プレースホルダー PDF を生成し Storage の `scripts/{id}/v1/script.pdf` にアップロード
+- ✅ `src/types/script.ts` — spec §5 準拠の `ScriptDoc` 型定義 + `INITIAL_SCRIPT_STATS`
+- ✅ `src/lib/script-tags.ts` — 26特性タグ・25ジャンル・5上演形態・5対象層・デフォルトヒアリングシート・トップページ初期セクション
+- ✅ 安全装置: `NEXT_PUBLIC_FIREBASE_PROJECT_ID === "script-marcketplace"` でないと exit(1)（typo は意図的）
+- ✅ 冪等性: cleanup → write の順序、固定 ID で管理
+- ✅ pdf-lib / dotenv を devDependencies に追加
+- ✅ レビュー: Critical 0 / High 2 (typo クラリファイ + thumbnailUrl 追加) / Medium 4 (feeScheduleMin null 修正、lastMessage フォールバック、duration 整合、HearingSheetQuestion 型注釈) → 主要な指摘を全て修正
+- ✅ `npx tsx scripts/seed.ts` 実行成功（cleanup → write 全て完了）
+- ✅ `npm run lint` / `npx tsc --noEmit` / `npm run build` 全て pass
+
+投入されるサンプルデータ（後続 Step での動作確認に利用）:
+- users: sato-misaki / tanaka-shunsuke / yamamoto-sensei / hiroko / kenji（前3者は作家、stripeOnboarded=true）
+- scripts: 8件（コメディ・青春・一人芝居・ミステリー・悲劇・喜劇・SF無料・恋愛）
+- chats × 3 / consultations × 3（unresponded/in_progress/completed のそれぞれ）
+- invoices × 2 (pending + paid) / purchases × 2 (有料 + 無料) / favorites + history
 
 ### Pass 1 P1-2: フェーズ1 Step 4「共通レイアウト」（完了）
 
