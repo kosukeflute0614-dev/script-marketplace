@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { getRelatedScripts, getScript, getScriptsByAuthor } from "@/app/actions/scripts";
+import { getMyReview, getReviews } from "@/app/actions/review";
 import { ScriptDetail } from "@/components/script/script-detail";
 import { canonicalScriptPath, parseScriptHandle } from "@/lib/script-url";
+import { getCurrentUser } from "@/lib/auth-server";
+import { getAdminDb } from "@/lib/firebase-admin";
 
 type Props = {
   // 動的セグメント名は /scripts/[scriptId] のまま（URL は実際は handle）
@@ -92,13 +95,33 @@ export default async function ScriptPage({ params }: Props) {
     redirect(canonical);
   }
 
-  // 関連台本と同作家の他作品を並列で取得
-  const [authorRes, relatedRes] = await Promise.all([
+  // 関連台本・同作家の他作品・レビュー一覧を並列取得
+  const [authorRes, relatedRes, reviewsRes, me] = await Promise.all([
     getScriptsByAuthor(script.authorUid, script.id, 4),
     getRelatedScripts(script.id, 4),
+    getReviews(script.id, 20),
+    getCurrentUser(),
   ]);
   const authorScripts = authorRes.success ? (authorRes.data ?? []) : [];
   const relatedScripts = relatedRes.success ? (relatedRes.data ?? []) : [];
+  const reviews = reviewsRes.success ? (reviewsRes.data ?? []) : [];
+
+  // ログインユーザーがこの台本を購入済みなら canReview = true
+  let canReview = false;
+  let myReview = null;
+  if (me && me.uid !== script.authorUid) {
+    const purchaseSnap = await getAdminDb()
+      .collection("purchases")
+      .where("buyerUid", "==", me.uid)
+      .where("scriptId", "==", script.id)
+      .limit(1)
+      .get();
+    canReview = !purchaseSnap.empty;
+    if (canReview) {
+      const myRes = await getMyReview(script.id);
+      if (myRes.success) myReview = myRes.data ?? null;
+    }
+  }
 
   // JSON-LD CreativeWork
   const jsonLd = {
@@ -129,7 +152,14 @@ export default async function ScriptPage({ params }: Props) {
         // dangerouslySetInnerHTML は SEO 用 JSON-LD の標準パターン
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ScriptDetail script={script} authorScripts={authorScripts} relatedScripts={relatedScripts} />
+      <ScriptDetail
+        script={script}
+        authorScripts={authorScripts}
+        relatedScripts={relatedScripts}
+        reviews={reviews}
+        myReview={myReview}
+        canReview={canReview}
+      />
     </>
   );
 }

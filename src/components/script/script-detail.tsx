@@ -6,17 +6,32 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { SerializedScript } from "@/app/actions/scripts";
 import { ScriptCard } from "@/components/script/script-card";
+import { ReviewList } from "@/components/review/review-list";
+import { ReviewForm } from "@/components/review/review-form";
 import { SCRIPT_TAG_DEFINITIONS } from "@/lib/script-tags";
+import type { SerializedReview } from "@/types/review";
 
 type Props = {
   script: SerializedScript;
   authorScripts: SerializedScript[];
   relatedScripts: SerializedScript[];
+  reviews: SerializedReview[];
+  /** 自分のレビュー (購入済みかつログイン時のみ) */
+  myReview: SerializedReview | null;
+  /** ログインユーザーが購入済みなら true */
+  canReview: boolean;
 };
 
 const TAG_LABEL_MAP = new Map(SCRIPT_TAG_DEFINITIONS.map((t) => [t.id, t.label]));
 
-export function ScriptDetail({ script, authorScripts, relatedScripts }: Props) {
+export function ScriptDetail({
+  script,
+  authorScripts,
+  relatedScripts,
+  reviews,
+  myReview,
+  canReview,
+}: Props) {
   const cast = `${script.castTotal.min === script.castTotal.max ? script.castTotal.min : `${script.castTotal.min}〜${script.castTotal.max}`}人`;
   const breakdown = `男${script.castBreakdown.male}/女${script.castBreakdown.female}/不問${script.castBreakdown.unspecified}`;
   const priceLabel =
@@ -169,6 +184,26 @@ export function ScriptDetail({ script, authorScripts, relatedScripts }: Props) {
           </p>
         </Section>
       ) : null}
+
+      {/* レビュー */}
+      <Section
+        title={
+          script.stats.reviewCount > 0
+            ? `レビュー ★${script.stats.reviewAverage.toFixed(1)}（${script.stats.reviewCount}件）`
+            : "レビュー"
+        }
+      >
+        {canReview ? (
+          <div className="mb-4">
+            <ReviewForm scriptId={script.id} initial={myReview} />
+          </div>
+        ) : (
+          <p className="text-muted-foreground mb-4 text-xs">
+            購入済みの方はレビューを投稿できます。
+          </p>
+        )}
+        <ReviewList reviews={reviews} />
+      </Section>
 
       {/* 同じ作家の他作品 */}
       {authorScripts.length > 0 ? (
