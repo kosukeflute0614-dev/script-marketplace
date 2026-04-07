@@ -17,8 +17,24 @@ const notoSansJp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "脚本マーケット",
+  title: {
+    default: "脚本マーケット",
+    template: "%s | 脚本マーケット",
+  },
   description: "演劇台本を「探す・買う・上演許可を取る」ワンストップ・プラットフォーム",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  openGraph: {
+    title: "脚本マーケット",
+    description: "演劇台本を「探す・買う・上演許可を取る」ワンストップ・プラットフォーム",
+    type: "website",
+    locale: "ja_JP",
+    siteName: "脚本マーケット",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "脚本マーケット",
+    description: "演劇台本を「探す・買う・上演許可を取る」ワンストップ・プラットフォーム",
+  },
 };
 
 export default function RootLayout({
