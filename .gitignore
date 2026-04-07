@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# session prompt notes (作業引き継ぎメモ。リポジトリには載せない)
+docs/pronpt.txt

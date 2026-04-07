@@ -8,27 +8,28 @@ spec.md の補足ドキュメント。Server Actions の全入出力定義、画
 
 ### 1-1. auth.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| registerWithEmail | メール＋パスワードで登録 | 不要 | email, password, displayName | uid |
-| setUserId | ユーザーID設定（初回のみ。変更不可） | 必須 | userId | success |
-| updateProfile | プロフィール更新 | 必須 | displayName?, bio?, iconUrl?, snsLinks? | success |
-| deleteAccount | アカウント削除 | 必須 | — | success |
+| アクション        | 概要                                 | 認証 | 入力                                    | 出力    |
+| ----------------- | ------------------------------------ | ---- | --------------------------------------- | ------- |
+| registerWithEmail | メール＋パスワードで登録             | 不要 | email, password, displayName            | uid     |
+| setUserId         | ユーザーID設定（初回のみ。変更不可） | 必須 | userId                                  | success |
+| updateProfile     | プロフィール更新                     | 必須 | displayName?, bio?, iconUrl?, snsLinks? | success |
+| deleteAccount     | アカウント削除                       | 必須 | —                                       | success |
 
 ### 1-2. scripts.ts
 
-| アクション | 概要 | 認証 | 権限 | 入力 | 出力 |
-|-----------|------|------|------|------|------|
-| createScript | 新規出品 | 必須 | Stripe連携済み | 全メタデータ + PDF | scriptId |
-| updateScript | メタデータ更新 | 必須 | 出品者本人 | 更新フィールド | success |
-| updateScriptPdf | PDF差し替え | 必須 | 出品者本人 | PDF | 新バージョン番号 |
-| unlistScript | 非公開化 | 必須 | 出品者本人 | scriptId | success |
-| relistScript | 再公開 | 必須 | 出品者本人 | scriptId | success |
-| getScript | 台本詳細取得 | 不要 | — | scriptId | 台本データ |
-| getScriptsByAuthor | 作家の台本一覧 | 不要 | — | authorUid, pagination | 台本リスト |
-| getMyScripts | 自分の出品一覧 | 必須 | 本人 | pagination | 台本リスト + 売上 |
+| アクション         | 概要           | 認証 | 権限           | 入力                  | 出力              |
+| ------------------ | -------------- | ---- | -------------- | --------------------- | ----------------- |
+| createScript       | 新規出品       | 必須 | Stripe連携済み | 全メタデータ + PDF    | scriptId          |
+| updateScript       | メタデータ更新 | 必須 | 出品者本人     | 更新フィールド        | success           |
+| updateScriptPdf    | PDF差し替え    | 必須 | 出品者本人     | PDF                   | 新バージョン番号  |
+| unlistScript       | 非公開化       | 必須 | 出品者本人     | scriptId              | success           |
+| relistScript       | 再公開         | 必須 | 出品者本人     | scriptId              | success           |
+| getScript          | 台本詳細取得   | 不要 | —              | scriptId              | 台本データ        |
+| getScriptsByAuthor | 作家の台本一覧 | 不要 | —              | authorUid, pagination | 台本リスト        |
+| getMyScripts       | 自分の出品一覧 | 必須 | 本人           | pagination            | 台本リスト + 売上 |
 
 **createScript の処理:**
+
 1. Stripe連携済みチェック
 2. バリデーション
 3. PDFをStorageにアップロード
@@ -38,6 +39,7 @@ spec.md の補足ドキュメント。Server Actions の全入出力定義、画
 7. Algolia同期はCloud Functionsトリガーで自動
 
 **updateScriptPdf の処理:**
+
 1. 新PDFをStorageアップロード
 2. currentVersionインクリメント
 3. versions/{version} 作成
@@ -46,48 +48,52 @@ spec.md の補足ドキュメント。Server Actions の全入出力定義、画
 
 ### 1-3. search.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| saveSearch | 検索条件保存 | 必須 | name, filters | savedSearchId |
-| getSavedSearches | 保存済み一覧 | 必須 | — | リスト |
-| deleteSavedSearch | 保存済み削除 | 必須 | savedSearchId | success |
+| アクション        | 概要         | 認証 | 入力          | 出力          |
+| ----------------- | ------------ | ---- | ------------- | ------------- |
+| saveSearch        | 検索条件保存 | 必須 | name, filters | savedSearchId |
+| getSavedSearches  | 保存済み一覧 | 必須 | —             | リスト        |
+| deleteSavedSearch | 保存済み削除 | 必須 | savedSearchId | success       |
 
 検索実行はAlgolia InstantSearchがクライアント側で直接実行。Server Action不要。
 
 ### 1-4. purchase.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| createCheckoutSession | 有料台本の決済セッション作成 | 必須 | scriptId | sessionUrl |
-| createFreePurchase | 無料台本の購入記録作成 | 必須 | scriptId | success |
-| getMyPurchases | 購入済み一覧 | 必須 | pagination | リスト |
-| getDownloadUrl | PDFダウンロードURL取得 | 必須 | scriptId | signedUrl |
+| アクション            | 概要                         | 認証 | 入力       | 出力       |
+| --------------------- | ---------------------------- | ---- | ---------- | ---------- |
+| createCheckoutSession | 有料台本の決済セッション作成 | 必須 | scriptId   | sessionUrl |
+| createFreePurchase    | 無料台本の購入記録作成       | 必須 | scriptId   | success    |
+| getMyPurchases        | 購入済み一覧                 | 必須 | pagination | リスト     |
+| getDownloadUrl        | PDFダウンロードURL取得       | 必須 | scriptId   | signedUrl  |
 
 **createCheckoutSession:**
+
 1. 台本存在・価格確認
 2. 二重購入チェック
 3. Stripe Checkout Session作成（application_fee_amount = amount × feeRate）
 4. sessionURLを返す
 
 **createFreePurchase:**
+
 1. 無料台本であることを確認
 2. 二重購入チェック
 3. purchases作成（amount: 0, platformFee: 0）
 4. stats.purchaseCountインクリメント
 
 **getDownloadUrl:**
+
 1. purchases で購入記録確認
 2. Firebase Storage の署名付きURL生成（有効期限1時間）
 
 ### 1-5. chat.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| startChat | チャット開設（相手1人につき1ルーム） | 必須 | targetUid | chatId |
-| sendMessage | テキスト送信 | 必須 | chatId, text | messageId |
-| getMyChats | チャット一覧 | 必須 | — | リスト |
+| アクション  | 概要                                 | 認証 | 入力         | 出力      |
+| ----------- | ------------------------------------ | ---- | ------------ | --------- |
+| startChat   | チャット開設（相手1人につき1ルーム） | 必須 | targetUid    | chatId    |
+| sendMessage | テキスト送信                         | 必須 | chatId, text | messageId |
+| getMyChats  | チャット一覧                         | 必須 | —            | リスト    |
 
 **startChat:**
+
 1. 同じ相手とのチャットルームが既にあるか確認
    - あり: 既存のchatIdを返す
    - なし: 新規作成
@@ -100,13 +106,14 @@ spec.md の補足ドキュメント。Server Actions の全入出力定義、画
 
 ### 1-5b. consultation.ts（新規）
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| createConsultation | 上演許可の相談を送信（ヒアリングシート回答と同時） | 必須 | chatId, scriptId, hearingSheetResponses | consultationId |
-| getMyConsultations | 相談管理一覧 | 必須 | status? | リスト |
-| completeConsultation | 相談を完了 | 必須 | consultationId | success |
+| アクション           | 概要                                               | 認証 | 入力                                    | 出力           |
+| -------------------- | -------------------------------------------------- | ---- | --------------------------------------- | -------------- |
+| createConsultation   | 上演許可の相談を送信（ヒアリングシート回答と同時） | 必須 | chatId, scriptId, hearingSheetResponses | consultationId |
+| getMyConsultations   | 相談管理一覧                                       | 必須 | status?                                 | リスト         |
+| completeConsultation | 相談を完了                                         | 必須 | consultationId                          | success        |
 
 **createConsultation:**
+
 1. ヒアリングシート取得（台本個別 > 作家デフォルト）
 2. 作家とのチャットルームがあるか確認 → なければ新規作成
 3. consultationsドキュメント作成（status: 作家=unresponded、利用者=consulting）
@@ -116,99 +123,102 @@ spec.md の補足ドキュメント。Server Actions の全入出力定義、画
 7. 作家にメール通知
 
 **completeConsultation:**
+
 1. 相談の参加者確認（requesterUid または authorUid）
 2. 自分のstatusを `completed` に更新（相手は変わらない）
 3. チャットに type: system メッセージ投稿（「{ユーザー名}さんがやり取りを完了しました」）
 
 ### 1-6. invoice.ts
 
-| アクション | 概要 | 認証 | 権限 | 入力 | 出力 |
-|-----------|------|------|------|------|------|
-| createInvoice | 請求作成 | 必須 | チャット参加者（出品者側） | chatId, amount, label, consultationId?, memo? | invoiceId |
-| payInvoice | 請求支払い | 必須 | チャット参加者（支払い側） | invoiceId | sessionUrl |
-| cancelInvoice | 請求キャンセル | 必須 | 請求作成者 | invoiceId | success |
-| getInvoicesByChat | チャット内請求一覧 | 必須 | チャット参加者 | chatId | リスト |
+| アクション        | 概要               | 認証 | 権限                       | 入力                                          | 出力       |
+| ----------------- | ------------------ | ---- | -------------------------- | --------------------------------------------- | ---------- |
+| createInvoice     | 請求作成           | 必須 | チャット参加者（出品者側） | chatId, amount, label, consultationId?, memo? | invoiceId  |
+| payInvoice        | 請求支払い         | 必須 | チャット参加者（支払い側） | invoiceId                                     | sessionUrl |
+| cancelInvoice     | 請求キャンセル     | 必須 | 請求作成者                 | invoiceId                                     | success    |
+| getInvoicesByChat | チャット内請求一覧 | 必須 | チャット参加者             | chatId                                        | リスト     |
 
 **createInvoice:**
+
 1. チャット参加者確認
 2. invoicesドキュメント作成（status: pending。consultationId が指定された場合は保存）
 3. チャットに type: invoice メッセージ投稿
 4. 相手にメール通知
 
 **payInvoice:**
+
 1. invoice存在・status確認（pendingのみ）
 2. Stripe Checkout Session作成
 3. sessionURL返す
 
 ### 1-7. hearing-sheet.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| updateDefaultHearingSheet | デフォルト更新 | 必須 | questions[] | success |
-| updateScriptHearingSheet | 台本個別更新 | 必須 | scriptId, questions[] | success |
-| clearScriptHearingSheet | 個別設定クリア | 必須 | scriptId | success |
-| getHearingSheet | 取得（個別 > デフォルト） | 必須 | scriptId?, authorUid | 質問リスト |
+| アクション                | 概要                      | 認証 | 入力                  | 出力       |
+| ------------------------- | ------------------------- | ---- | --------------------- | ---------- |
+| updateDefaultHearingSheet | デフォルト更新            | 必須 | questions[]           | success    |
+| updateScriptHearingSheet  | 台本個別更新              | 必須 | scriptId, questions[] | success    |
+| clearScriptHearingSheet   | 個別設定クリア            | 必須 | scriptId              | success    |
+| getHearingSheet           | 取得（個別 > デフォルト） | 必須 | scriptId?, authorUid  | 質問リスト |
 
 ### 1-8. review.ts
 
-| アクション | 概要 | 認証 | 権限 | 入力 | 出力 |
-|-----------|------|------|------|------|------|
-| createReview | 投稿 | 必須 | 購入者 | scriptId, rating, comment? | reviewId |
-| updateReview | 編集 | 必須 | 投稿者 | scriptId, rating?, comment? | success |
-| deleteReview | 削除 | 必須 | 投稿者 | scriptId | success |
-| getReviews | 一覧取得 | 不要 | — | scriptId, pagination | リスト |
+| アクション   | 概要     | 認証 | 権限   | 入力                        | 出力     |
+| ------------ | -------- | ---- | ------ | --------------------------- | -------- |
+| createReview | 投稿     | 必須 | 購入者 | scriptId, rating, comment?  | reviewId |
+| updateReview | 編集     | 必須 | 投稿者 | scriptId, rating?, comment? | success  |
+| deleteReview | 削除     | 必須 | 投稿者 | scriptId                    | success  |
+| getReviews   | 一覧取得 | 不要 | —      | scriptId, pagination        | リスト   |
 
 createReview 時に stats.reviewCount / reviewAverage を再計算。
 
 ### 1-9. favorite.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| addFavorite | 追加 | 必須 | scriptId | success |
-| removeFavorite | 削除 | 必須 | scriptId | success |
-| getMyFavorites | 一覧 | 必須 | pagination | リスト |
+| アクション     | 概要 | 認証 | 入力       | 出力    |
+| -------------- | ---- | ---- | ---------- | ------- |
+| addFavorite    | 追加 | 必須 | scriptId   | success |
+| removeFavorite | 削除 | 必須 | scriptId   | success |
+| getMyFavorites | 一覧 | 必須 | pagination | リスト  |
 
 追加・削除時に stats.favoriteCount を更新。
 
 ### 1-10. notification.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| updateNotificationSettings | 設定更新 | 必須 | settings | success |
-| getNotificationSettings | 設定取得 | 必須 | — | settings |
+| アクション                 | 概要     | 認証 | 入力     | 出力     |
+| -------------------------- | -------- | ---- | -------- | -------- |
+| updateNotificationSettings | 設定更新 | 必須 | settings | success  |
+| getNotificationSettings    | 設定取得 | 必須 | —        | settings |
 
 ### 1-11. stripe.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
-| createConnectAccount | Stripe連携開始 | 必須 | — | onboardingUrl |
-| getConnectDashboardUrl | Expressダッシュボードリンク | 必須 | — | dashboardUrl |
-| getPayoutSummary | 売上サマリー | 必須 | period? | 売上データ |
+| アクション             | 概要                        | 認証 | 入力    | 出力          |
+| ---------------------- | --------------------------- | ---- | ------- | ------------- |
+| createConnectAccount   | Stripe連携開始              | 必須 | —       | onboardingUrl |
+| getConnectDashboardUrl | Expressダッシュボードリンク | 必須 | —       | dashboardUrl  |
+| getPayoutSummary       | 売上サマリー                | 必須 | period? | 売上データ    |
 
 ### 1-12. report.ts
 
-| アクション | 概要 | 認証 | 入力 | 出力 |
-|-----------|------|------|------|------|
+| アクション   | 概要     | 認証 | 入力                                       | 出力     |
+| ------------ | -------- | ---- | ------------------------------------------ | -------- |
 | createReport | 通報送信 | 必須 | targetType, targetId, reason, description? | reportId |
 
 ### 1-13. admin.ts
 
-| アクション | 概要 | 認証 | 権限 | 入力 | 出力 |
-|-----------|------|------|------|------|------|
-| updateFeeRate | 手数料率変更 | 必須 | 管理者 | feeRate | success |
-| getReports | 通報一覧 | 必須 | 管理者 | status?, pagination | リスト |
-| resolveReport | 通報対応済み | 必須 | 管理者 | reportId, action | success |
-| suspendUser | アカウント停止 | 必須 | 管理者 | uid | success |
-| unsuspendUser | 停止解除 | 必須 | 管理者 | uid | success |
-| getSalesReport | 売上レポート | 必須 | 管理者 | period | GMV, 手数料, 件数 |
-| forceUnlistScript | 強制非公開 | 必須 | 管理者 | scriptId | success |
+| アクション        | 概要           | 認証 | 権限   | 入力                | 出力              |
+| ----------------- | -------------- | ---- | ------ | ------------------- | ----------------- |
+| updateFeeRate     | 手数料率変更   | 必須 | 管理者 | feeRate             | success           |
+| getReports        | 通報一覧       | 必須 | 管理者 | status?, pagination | リスト            |
+| resolveReport     | 通報対応済み   | 必須 | 管理者 | reportId, action    | success           |
+| suspendUser       | アカウント停止 | 必須 | 管理者 | uid                 | success           |
+| unsuspendUser     | 停止解除       | 必須 | 管理者 | uid                 | success           |
+| getSalesReport    | 売上レポート   | 必須 | 管理者 | period              | GMV, 手数料, 件数 |
+| forceUnlistScript | 強制非公開     | 必須 | 管理者 | scriptId            | success           |
 
 ### 1-14. Webhook（app/api/webhooks/stripe/route.ts）
 
-| イベント | 処理 |
-|---------|------|
+| イベント                   | 処理                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------- |
 | checkout.session.completed | 台本購入: purchases作成、stats更新、通知。請求支払い: invoices.status→paid、通知 |
-| account.updated | users.stripeAccountId保存、stripeOnboarded更新 |
+| account.updated            | users.stripeAccountId保存、stripeOnboarded更新                                   |
 
 Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 
@@ -247,6 +257,7 @@ Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 ### 2-2. 検索結果一覧
 
 **スマホ版:**
+
 ```
 ┌──────────────────────────┐
 │ [🔍 フリーワード検索      ] │
@@ -260,6 +271,7 @@ Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 ```
 
 **PC版:**
+
 ```
 ┌──────────┬─────────────────┐
 │ サイドバー │ 検索結果（3〜4列）  │
@@ -268,6 +280,7 @@ Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 ```
 
 **絞り込みモーダル（スマホ版）:**
+
 ```
 ┌──────────────────────────┐
 │ ✕ 絞り込み条件    [リセット] │
@@ -285,6 +298,7 @@ Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 ```
 
 **検索結果カード:**
+
 ```
 ┌──────────────────────┐
 │ [サムネイル画像]        │
@@ -495,12 +509,15 @@ Webhook処理: 署名検証必須。冪等性確保（Event IDチェック）。
 ### 3-0. 選択肢マスター
 
 #### genres（25種）
+
 現代劇, 時代劇, 不条理劇, ポストドラマ演劇, 悲劇, 喜劇, コメディ, 人情劇, 恋愛, 翻案戯曲, SF・近未来, ホラー, ミステリー, サスペンス, ファンタジー, 学園モノ, アングラ, 評伝劇, 政治・社会問題, アヴァンギャルド・前衛, お茶の間, ナンセンス, 青春, 群像劇, 実験演劇
 
 #### performanceType（5種）
+
 ストレートプレイ, ミュージカル, 朗読劇, 一人芝居, 短編（30分以下）
 
 #### targetAudience（5種）
+
 一般, 高校演劇向け, 大学演劇向け, 子供向け, シニア向け
 
 ### 3-1. 特性タグ（7カテゴリ26種）
@@ -565,17 +582,17 @@ config/platform の scriptTagDefinitions に設定する初期値。
 
 初めてヒアリングシートを設定する作家に表示する参考例。
 
-| order | question |
-|-------|----------|
-| 1 | 団体名を教えてください |
-| 2 | 公演形態を教えてください（本公演 / ワークショップ / 大会 / 授業） |
-| 3 | 出演人数を教えてください |
-| 4 | 公演日程を教えてください |
-| 5 | 公演回数を教えてください |
-| 6 | 会場名・客席数を教えてください |
-| 7 | チケット料金を教えてください（有料の場合） |
-| 8 | 台本の改変はありますか？ |
-| 9 | 映像配信・録画の予定はありますか？ |
+| order | question                                                          |
+| ----- | ----------------------------------------------------------------- |
+| 1     | 団体名を教えてください                                            |
+| 2     | 公演形態を教えてください（本公演 / ワークショップ / 大会 / 授業） |
+| 3     | 出演人数を教えてください                                          |
+| 4     | 公演日程を教えてください                                          |
+| 5     | 公演回数を教えてください                                          |
+| 6     | 会場名・客席数を教えてください                                    |
+| 7     | チケット料金を教えてください（有料の場合）                        |
+| 8     | 台本の改変はありますか？                                          |
+| 9     | 映像配信・録画の予定はありますか？                                |
 
 ### 3-3. トップページ初期セクション
 
@@ -606,19 +623,19 @@ config/platform の topPageSections の初期値。
 
 ## 4. バリデーションルール
 
-| フィールド | ルール |
-|-----------|--------|
-| title | 必須。1〜100文字 |
-| synopsis | 必須。300〜1,000文字 |
-| price | 0以上。上限なし（0 = 無料） |
-| castTotal.min | 1以上。max以下 |
-| castTotal.max | min以上 |
-| castBreakdown | male + female + unspecified = castTotal.max |
-| duration | 1〜600（分） |
-| genres | 1つ以上選択必須 |
-| performanceType | 1つ以上選択必須 |
-| invoice.amount | 1円以上 |
-| userId | 3〜30文字。正規表現: ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ |
+| フィールド      | ルール                                               |
+| --------------- | ---------------------------------------------------- |
+| title           | 必須。1〜100文字                                     |
+| synopsis        | 必須。300〜1,000文字                                 |
+| price           | 0以上。上限なし（0 = 無料）                          |
+| castTotal.min   | 1以上。max以下                                       |
+| castTotal.max   | min以上                                              |
+| castBreakdown   | male + female + unspecified = castTotal.max          |
+| duration        | 1〜600（分）                                         |
+| genres          | 1つ以上選択必須                                      |
+| performanceType | 1つ以上選択必須                                      |
+| invoice.amount  | 1円以上                                              |
+| userId          | 3〜30文字。正規表現: ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ |
 
 ---
 
@@ -632,52 +649,52 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == uid;
-      
+
       match /favorites/{docId} { allow read, write: if request.auth != null && request.auth.uid == uid; }
       match /history/{docId} { allow read, write: if request.auth != null && request.auth.uid == uid; }
       match /savedSearches/{docId} { allow read, write: if request.auth != null && request.auth.uid == uid; }
     }
-    
+
     // scripts: publishedは全員読み取り。作家本人のみ書き込み
     match /scripts/{scriptId} {
       allow read: if resource.data.status == 'published' || (request.auth != null && request.auth.uid == resource.data.authorUid);
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
-      
+
       match /versions/{versionId} { allow read: if true; allow write: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/scripts/$(scriptId)).data.authorUid; }
       match /reviews/{reviewerUid} { allow read: if true; allow write: if request.auth != null && request.auth.uid == reviewerUid; }
     }
-    
+
     // chats: 参加者のみ
     match /chats/{chatId} {
       allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
       match /messages/{messageId} { allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants; }
     }
-    
+
     // consultations: 相談者または作家のみ
     match /consultations/{consultationId} {
       allow read: if request.auth != null && (request.auth.uid == resource.data.requesterUid || request.auth.uid == resource.data.authorUid);
       allow create: if request.auth != null;
       allow update: if request.auth != null && (request.auth.uid == resource.data.requesterUid || request.auth.uid == resource.data.authorUid);
     }
-    
+
     // invoices: 作成者または支払い者のみ
     match /invoices/{invoiceId} {
       allow read: if request.auth != null && (request.auth.uid == resource.data.creatorUid || request.auth.uid == resource.data.payerUid);
       allow create: if request.auth != null;
       // ステータス更新はServer Actions/Webhook経由のみ（Admin SDK使用）
     }
-    
+
     // purchases: 購入者のみ読み取り。作成はServer Actions経由のみ
     match /purchases/{purchaseId} {
       allow read: if request.auth != null && request.auth.uid == resource.data.buyerUid;
     }
-    
+
     // reports: ログインユーザーなら作成可能。読み取りは管理者のみ（Admin SDK）
     match /reports/{reportId} {
       allow create: if request.auth != null;
     }
-    
+
     // config: 読み取りのみ（更新は管理者がAdmin SDK経由）
     match /config/{docId} {
       allow read: if true;
