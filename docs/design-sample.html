@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脚本マーケット デザインサンプル（確定版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAF8;
+    color: #333;
+    font-family: 'Noto Sans JP', -apple-system, 'Hiragino Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* ── 注釈バナー ── */
+  .note-banner {
+    background: #333; color: #fff; padding: 12px 20px;
+    font-size: 13px; text-align: center;
+  }
+
+  .page { padding: 20px 0 60px; }
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+  .site-header {
+    padding: 16px 0; margin-bottom: 32px;
+    border-bottom: 1px solid #DDD;
+  }
+  .site-header h1 { font-size: 20px; font-weight: 700; }
+
+  .thumbnail {
+    width: 100%; aspect-ratio: 16/9; border-radius: 8px;
+    background: #F0EDE8; color: #999;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; margin-bottom: 24px;
+  }
+
+  .title { font-size: 26px; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 8px; }
+  .author { margin-bottom: 20px; opacity: 0.7; }
+
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 24px;
+  }
+  .meta-item { padding: 12px; border-radius: 8px; background: #F5F3EE; }
+  .meta-label { font-size: 12px; opacity: 0.6; margin-bottom: 4px; }
+  .meta-value { font-size: 15px; font-weight: 600; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .tag { padding: 6px 14px; border-radius: 20px; font-size: 13px; background: #EDEBE6; color: #555; }
+
+  .btn-group { display: flex; gap: 12px; margin-bottom: 32px; }
+  .btn {
+    flex: 1; padding: 14px; border: none; border-radius: 8px;
+    font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: #333; color: #fff; }
+  .btn-secondary { background: transparent; border: 2px solid #333; color: #333; }
+
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 18px; font-weight: 700; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid #DDD;
+  }
+  .section p { line-height: 1.8; }
+
+  .fee-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .fee-table th, .fee-table td { padding: 12px 16px; text-align: left; }
+  .fee-table th { font-size: 13px; opacity: 0.6; border-bottom: 1px solid #EEE; }
+  .fee-table td { border-bottom: 1px solid #F5F3EE; }
+  .fee-note { font-size: 13px; opacity: 0.6; }
+
+  .history-item { padding: 8px 0; font-size: 14px; }
+
+  .ranking { display: flex; gap: 16px; margin-bottom: 24px; }
+  .ranking-item { padding: 12px 16px; border-radius: 8px; font-size: 14px; background: #F5F3EE; }
+
+  .review-summary { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .review-stars { font-size: 24px; }
+  .review-card { padding: 16px; border-radius: 8px; margin-bottom: 12px; background: #F5F3EE; }
+  .review-author { font-size: 13px; opacity: 0.6; margin-bottom: 8px; }
+  .review-text { font-size: 14px; line-height: 1.7; }
+
+  .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .related-card { padding: 16px; border-radius: 8px; background: #F5F3EE; }
+  .related-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .related-meta { font-size: 12px; opacity: 0.6; }
+
+  .site-footer {
+    margin-top: 48px; padding: 24px 0;
+    border-top: 1px solid #DDD; opacity: 0.5;
+    font-size: 13px; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="note-banner">
+  確定済みデザインサンプル（パターンI: note系 + Noto Sans JP統一）。実装時の参考用。
+</div>
+
+<div class="page">
+  <div class="container">
+
+    <div class="site-header">
+      <h1>脚本マーケット</h1>
+    </div>
+
+    <div class="thumbnail">🎭</div>
+
+    <h2 class="title">ロミオとジュリエット ― 或る夏の日の記憶</h2>
+    <p class="author">佐藤 美咲</p>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="meta-label">ジャンル</div>
+        <div class="meta-value">コメディ</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">キャスト</div>
+        <div class="meta-value">5人（男2/女2/不問1）</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">上演時間</div>
+        <div class="meta-value">90分</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">上演形態</div>
+        <div class="meta-value">ストレートプレイ</div>
+      </div>
+    </div>
+
+    <div class="tags">
+      <span class="tag">大道具なし</span>
+      <span class="tag">照明シンプル</span>
+      <span class="tag">改変・抜粋OK</span>
+      <span class="tag">高校演劇向け</span>
+      <span class="tag">泣ける</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary">プレビューを見る</button>
+      <button class="btn btn-secondary">¥1,500 で購入</button>
+    </div>
+
+    <div class="section">
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
+        <span style="font-size: 14px; opacity: 0.7;">上演許可の相談: 5件</span>
+        <button class="btn btn-secondary" style="flex: none; padding: 8px 16px; font-size: 13px;">上演許可の相談をする</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">あらすじ</h3>
+      <p>ある地方都市の古びた劇場。取り壊しが決まったその場所に、かつての劇団員たちが集まってくる。20年前、この舞台で最後の公演を行った彼らは、それぞれの人生を歩んでいた。再会は懐かしさと、少しの気まずさを伴って——。「あの日、本当は何を伝えたかったのか」。過去と現在が交錯する90分の物語。笑いあり、涙あり、そして小さな希望が灯る。</p>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">上演料の目安</h3>
+      <table class="fee-table">
+        <thead>
+          <tr><th>条件</th><th>金額</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>入場無料の公演</td><td>5,000円/回</td></tr>
+          <tr><td>有料公演（100席以下）</td><td>10,000円/回</td></tr>
+          <tr><td>有料公演（100席以上）</td><td>20,000円/回</td></tr>
+          <tr><td>高校演劇（大会）</td><td>5,000円/回</td></tr>
+        </tbody>
+      </table>
+      <p class="fee-note">※最終的な上演料は作家との相談で決まります</p>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">上演履歴</h3>
+      <div class="history-item">・2025年 風の劇場（岡山芸術劇場）</div>
+      <div class="history-item">・2024年 青空演劇部（県大会 優秀賞）</div>
+      <div class="history-item">・2023年 小さな窓シアター（下北沢）</div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">作家コメント</h3>
+      <p>この台本は、私自身が所属していた劇団の解散をきっかけに書きました。演出の自由度は高く設計しています。場面転換はありませんので、小さなスペースでも上演可能です。キャストの年齢設定は自由に変えていただいて構いません。</p>
+    </div>
+
+    <div class="ranking">
+      <div class="ranking-item">📊 コメディ部門 3位 / 12作品中</div>
+      <div class="ranking-item">📊 高校演劇向け 1位 / 8作品中</div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">レビュー</h3>
+      <div class="review-summary">
+        <span class="review-stars">★★★★☆</span>
+        <span>4.2（12件）</span>
+      </div>
+      <div class="review-card">
+        <div class="review-author">★★★★★ 田中さん（○○劇団）</div>
+        <div class="review-text">部員8人の小さな劇団ですが、この台本のおかげで初めての本公演を成功させることができました。笑いのポイントが自然で、観客の反応がとても良かったです。</div>
+      </div>
+      <div class="review-card">
+        <div class="review-author">★★★★☆ 山本先生（△△高校）</div>
+        <div class="review-text">大会用に使用しました。90分という時間設定が絶妙で、削る必要がほぼありませんでした。生徒たちも楽しんで演じていました。</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">似た条件の台本</h3>
+      <div class="related-grid">
+        <div class="related-card">
+          <div class="related-title">夏の約束</div>
+          <div class="related-meta">コメディ / 4人 / 60分</div>
+        </div>
+        <div class="related-card">
+          <div class="related-title">窓辺の手紙</div>
+          <div class="related-meta">ドラマ / 5人 / 90分</div>
+        </div>
+        <div class="related-card">
+          <div class="related-title">放課後の幽霊</div>
+          <div class="related-meta">コメディ / 6人 / 75分</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer">
+      <p>© 脚本マーケット</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
