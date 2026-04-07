@@ -1,14 +1,16 @@
 rules_version = '2';
 
-// 脚本マーケット Firestore セキュリティルール (Pass1 暫定版)
+// 脚本マーケット Firestore セキュリティルール (Pass1 最終版)
 //
 // 基本方針 (spec-details.md §5):
 // - 公開リソース (scripts published / users プロフィール / config) は誰でも read
 // - 個人リソース (favorites / chats / consultations / invoices) は当事者のみ
-// - 書き込みは Server Actions 経由を基本とし、Admin SDK で操作する
-// - クライアント onSnapshot を許可するリソース (users / chats(messages) / scripts) のみ client read を開放
+// - 書き込みは Server Actions (Admin SDK) 経由を基本とし、クライアント直接書き込みは
+//   onSnapshot で読み取りが必要なドキュメント (users.notificationSettings 等) のみに限定
+// - reports / purchases / invoices.status は管理者 / Webhook 経由のみ
 //
-// このファイルは P1-4 で初版を deploy し、P1-18 で最終調整する。
+// P1-4 で初版を deploy、P1-18 で reports / notificationThrottles / 補助索引を含めて
+// 最終調整した。Pass2 で Stripe Webhook 用の追加更新権限を付与する想定。
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -20,29 +22,43 @@ service cloud.firestore {
     function isMe(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
+    // notificationSettings の更新は許可するが、その他の sensitive フィールドは Admin SDK 経由のみ
+    function onlyAllowedUserFields() {
+      let allowed = ['notificationSettings', 'displayName', 'bio', 'iconUrl', 'snsLinks',
+                     'lastActiveAt', 'updatedAt'];
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
 
     // ----- users -----
     match /users/{uid} {
       allow read: if true; // プロフィールは公開
       allow create: if isMe(uid);
-      allow update: if isMe(uid);
+      // userId / stripeOnboarded / isAdmin / suspended 等は Server Actions (Admin SDK) 経由のみ
+      allow update: if isMe(uid) && onlyAllowedUserFields();
       allow delete: if isMe(uid);
 
       match /favorites/{docId} {
-        allow read, write: if isMe(uid);
+        // クライアントからの直接 read は許可（自分の一覧表示用）。書き込みは Server Action 経由
+        allow read: if isMe(uid);
+        allow write: if false;
       }
       match /history/{docId} {
-        allow read, write: if isMe(uid);
+        allow read: if isMe(uid);
+        allow write: if false;
       }
       match /savedSearches/{docId} {
-        allow read, write: if isMe(uid);
+        allow read: if isMe(uid);
+        allow write: if false;
+      }
+      // メール通知のスロットリング記録 (Server Actions のみ)
+      match /notificationThrottles/{key} {
+        allow read, write: if false;
       }
     }
 
-    // ----- userIds (補助索引、書き込みは Server Actions 経由のみ) -----
+    // ----- userIds (補助索引、Server Actions 経由のみ) -----
     match /userIds/{userId} {
       allow read: if true;
-      // クライアントから直接書き込み禁止 (Admin SDK 経由のみ)
       allow write: if false;
     }
 
@@ -50,23 +66,25 @@ service cloud.firestore {
     match /scripts/{scriptId} {
       allow read: if resource.data.status == 'published'
         || (isSignedIn() && request.auth.uid == resource.data.authorUid);
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && request.auth.uid == resource.data.authorUid;
+      // 出品作成は Server Action (createScript / Pass2) 経由のみ
+      allow create: if false;
+      // 更新は Server Actions 経由のみ (stats のような協調更新を防ぐ)
+      allow update: if false;
+      allow delete: if false;
 
       match /versions/{versionId} {
         allow read: if true;
-        allow write: if isSignedIn()
-          && request.auth.uid == get(/databases/$(database)/documents/scripts/$(scriptId)).data.authorUid;
+        allow write: if false;
       }
       match /reviews/{reviewerUid} {
+        // レビューは公開、書き込みは Server Action 経由のみ (stats 再計算が必要なため)
         allow read: if true;
-        allow write: if isMe(reviewerUid);
+        allow write: if false;
       }
     }
 
     // ----- chats -----
     // chats / messages の作成は Server Actions (Admin SDK) 経由のみに統一する。
-    // クライアントから直接 create する経路は無いため、create は禁止する。
     // read は参加者のみ（onSnapshot 用にクライアント許可）。
     match /chats/{chatId} {
       allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
@@ -75,8 +93,6 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow read: if isSignedIn()
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-        // Pass1 では client から直接書き込みしない（Server Action 経由）。
-        // 将来クライアント送信が必要になった際に解放する想定。
         allow create, update, delete: if false;
       }
     }
@@ -86,11 +102,8 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && (request.auth.uid == resource.data.requesterUid
           || request.auth.uid == resource.data.authorUid);
-      allow create: if isSignedIn();
-      allow update: if isSignedIn()
-        && (request.auth.uid == resource.data.requesterUid
-          || request.auth.uid == resource.data.authorUid);
-      allow delete: if false;
+      // create / update / delete は Server Actions 経由
+      allow write: if false;
     }
 
     // ----- invoices -----
@@ -98,29 +111,25 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && (request.auth.uid == resource.data.creatorUid
           || request.auth.uid == resource.data.payerUid);
-      allow create: if isSignedIn();
-      // ステータス更新は Server Actions / Webhook 経由 (Admin SDK)
-      allow update, delete: if false;
+      allow write: if false;
     }
 
     // ----- purchases -----
     match /purchases/{purchaseId} {
       allow read: if isSignedIn() && request.auth.uid == resource.data.buyerUid;
-      // 作成は Server Actions / Webhook 経由のみ
-      allow create, update, delete: if false;
+      allow write: if false;
     }
 
     // ----- reports -----
+    // 通報は Server Action (createReport) 経由で受け付ける
+    // クライアント read は禁止（管理者は Admin SDK で取得）
     match /reports/{reportId} {
-      allow create: if isSignedIn();
-      // 読み取りは管理者のみ (Admin SDK)
-      allow read, update, delete: if false;
+      allow read, write: if false;
     }
 
     // ----- config -----
     match /config/{docId} {
       allow read: if true;
-      // 更新は管理者 Server Actions 経由
       allow write: if false;
     }
   }
