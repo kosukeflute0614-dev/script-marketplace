@@ -3,10 +3,32 @@
 ## 現在のステータス
 
 **Pass**: Pass 1（APIキー受領前の作業）
-**Step**: P1-1 完了。次は P1-2「Step 4 共通レイアウト」
+**Step**: P1-2 完了。フェーズ1（基盤構築）完了。次は P1-3「seed スクリプト」
 **開発計画書**: `docs/development-plan.md`
 
 ## 直近の作業内容（2026-04-07）
+
+### Pass 1 P1-2: フェーズ1 Step 4「共通レイアウト」（完了）
+
+- ✅ `SiteHeader`（Server Component）— ロゴ + PCナビ + 右側アクション、ログイン状態で表示切替
+- ✅ `MobileNav`（Client Component）— shadcn/ui sheet によるハンバーガードロワー
+- ✅ `SiteFooter` — リンク集 + コピーライト
+- ✅ `SiteShell` — ヘッダー + main + フッター の共通レイアウトラッパー
+- ✅ `(public)/layout.tsx` 新規作成 — `/login` `/register` 以外を SiteShell でラップ
+- ✅ `(app)/layout.tsx` 拡張 — `/setup/user-id` `/verify-email` 以外を SiteShell でラップ。認可判定は pathname 欠落時も必ず実施
+- ✅ `(public)/page.tsx` をプレースホルダーからヒーロー入りトップへ
+- ✅ `mypage/page.tsx` `profile/edit/page.tsx` を `requireUser()` 経由に統一
+- ✅ shadcn/ui sheet を追加 + dialog/sheet の XIcon に aria-hidden 付与
+- ✅ ボーダー色をトンマナの `--border` (#dddddd) に統一
+- ✅ フルレビュー: Critical 0 / High 1 / Medium 2 / Low 3 → High と Medium 全修正、Low の修正可能なものも対応
+- ✅ ブラウザテスト観点1: 全13ケース パス（PC/モバイル/レスポンシブ/認証フロー/リダイレクト/バリデーション）
+- ✅ 最終差分チェック: Critical 0 / High 0 クリーン
+- ✅ `npm run lint` / `npx tsc --noEmit` / `npm run build` 全て pass
+
+### 開発支援ツール
+
+- ✅ `scripts/create-test-user.ts` — Admin SDK で `test-user@example.com` (emailVerified=true) を作成。`npx tsx scripts/create-test-user.ts` で実行
+- ✅ `tsx` `dotenv` を devDependencies に追加
 
 ### Pass 1 P1-1: フェーズ1 Step 3「認証・ユーザーID」（完了）
 

@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-server";
+import { requireUser } from "@/lib/auth-server";
 import { signOutAction } from "@/app/actions/auth";
 
 export const metadata = {
@@ -14,10 +13,11 @@ export const metadata = {
  * マイページの最小実装。
  * フェーズ1 Step3 時点ではログイン後の着地点として「ようこそ画面」だけを置く。
  * 購入済み/お気に入り/相談管理などの本機能は後続の Step で実装する。
+ *
+ * 未ログイン保護は (app)/layout.tsx で実施済み。requireUser はフェイルセーフ。
  */
 export default async function MyPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="font-heading mb-2 text-2xl font-bold">マイページ</h1>

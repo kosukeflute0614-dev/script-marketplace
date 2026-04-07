@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { SiteShell } from "@/components/layout/site-shell";
 import { getCurrentUser, needsEmailVerification } from "@/lib/auth-server";
 
 /**
@@ -12,6 +13,11 @@ import { getCurrentUser, needsEmailVerification } from "@/lib/auth-server";
  * 3. ログイン済みで userId 未設定 → /setup/user-id（既に /setup/user-id にいる場合を除く）
  * 4. ログイン済みで userId 設定済み + /setup/user-id にいる → /mypage
  * 5. emailVerified 済みで /verify-email にいる → /mypage（または /setup/user-id）
+ *
+ * 表示規則:
+ * - /setup/user-id と /verify-email は AuthCard でフルスクリーン表示するため、
+ *   ヘッダー/フッターを **付けず** に children をそのまま返す。
+ * - それ以外（/mypage, /profile/edit, /author/*, /chat 等）は SiteShell でラップ。
  *
  * 注意: getCurrentUser() の中で verifySession() が呼ばれるため、ここでは
  * getCurrentUser() のみを呼ぶ。Admin SDK のセッション検証コストを 1 回に抑えるため。
@@ -28,15 +34,12 @@ export default async function AppLayout({
 
   const headerStore = await headers();
   const pathnameHeader = headerStore.get("x-pathname");
-  // x-pathname が欠落するケース（middleware 未通過の内部呼び出し等）に備え、
-  // フォールバックは「リダイレクト判定をスキップして children を返す」。
-  // children 側のページコンポーネント自体が必要に応じて getCurrentUser を呼んで
-  // 自衛しているため、二重保護で安全。
-  if (!pathnameHeader) {
-    return <>{children}</>;
-  }
-  const pathname = pathnameHeader;
-
+  // x-pathname は middleware が必ずセットするはずだが、内部 RSC リクエストや
+  // ビルド時評価などで欠落する可能性に備える。
+  // ★ 認可リダイレクトは pathname が無くても **必ず実施する**。
+  //   pathname が無い場合は「現在地不明」として扱い、リダイレクト先の判定にだけ
+  //   使う（リダイレクト不要な状態なら children をそのまま返す）。
+  const pathname = pathnameHeader ?? "";
   const isOnUserIdSetup = pathname.startsWith("/setup/user-id");
   const isOnVerifyEmail = pathname.startsWith("/verify-email");
 
@@ -66,5 +69,10 @@ export default async function AppLayout({
     redirect("/mypage");
   }
 
-  return <>{children}</>;
+  // /setup/user-id は AuthCard でフルスクリーン表示するためシェルなし
+  if (isOnUserIdSetup) {
+    return <>{children}</>;
+  }
+
+  return <SiteShell user={user}>{children}</SiteShell>;
 }
