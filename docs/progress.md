@@ -2,9 +2,33 @@
 
 ## 現在のステータス
 
-**フェーズ**: フェーズ1 Step 2 完了。次は Step 3（認証・ユーザーID）。
+**Pass**: Pass 1（APIキー受領前の作業）
+**Step**: P1-1 完了。次は P1-2「Step 4 共通レイアウト」
+**開発計画書**: `docs/development-plan.md`
 
-## 前回の作業内容（2026-04-07）
+## 直近の作業内容（2026-04-07）
+
+### Pass 1 P1-1: フェーズ1 Step 3「認証・ユーザーID」（完了）
+
+- ✅ Firebase Auth クライアント（Google Popup / Email Password）
+- ✅ Server Actions: `createSession` / `destroySession` / `signOutAction` / `setUserId` / `updateProfile` / `deleteAccount` / `getMe`
+- ✅ Session cookie 方式（`__session`、HttpOnly、14日有効、Admin SDK の `createSessionCookie` で発行）
+- ✅ 認証ミドルウェア（`src/middleware.ts`）— Edge Runtime で cookie 存在チェック + `x-pathname` ヘッダ伝播
+- ✅ `(app)/layout.tsx` での厳密な認可判定（未ログイン/メール未確認/userId 未設定/setup 完了後の追い払い）
+- ✅ `users` ドキュメント自動作成（`createSession` と `getCurrentUser` の二重ロジック、`create()` + `ALREADY_EXISTS` catch で並走対策）
+- ✅ ユーザーID 一意性: `userIds/{userId}` 補助コレクション + Firestore トランザクションで TOCTOU 競合を排除
+- ✅ ユーザーIDバリデーション（`src/lib/user-id.ts`）— 正規表現・長さ・予約語
+- ✅ メール確認フロー（password ユーザーは `/verify-email` で待機。`reload` + `createSession` 再発行で確認後遷移）
+- ✅ 画面: `(public)/login`, `(public)/register`, `(app)/setup/user-id`, `(app)/profile/edit`, `(app)/verify-email`, `(app)/mypage`（暫定マイページ）
+- ✅ 共通: `Toaster`（sonner、右上スライドイン4秒）を root layout にマウント、shadcn/ui の form/button/input/label/card/separator/sonner/dialog を導入、`form.tsx` は手書き
+- ✅ パッケージ追加: `react-hook-form` `zod` `@hookform/resolvers` `sonner`
+- ✅ フルレビュー: Critical 1 / High 2 / Medium 4 / Low 3 → 全て修正
+- ✅ 再レビュー: Critical 0 / High 0 / Medium 1 / Low 1 → さらに修正
+- ✅ 最終差分チェック: Critical 0 / High 0（クリーン）
+- ✅ `npm run lint` / `npx tsc --noEmit` / `npm run build` 全て pass
+- ⏭ ブラウザテストは Step 4 完了後に「ブラウザテスト観点1」として統合実施
+
+## 過去の作業内容（2026-04-07）
 
 ### フェーズ1 Step 2: Firebase セットアップ（完了）
 
