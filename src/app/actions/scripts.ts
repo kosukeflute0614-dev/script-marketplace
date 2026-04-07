@@ -95,6 +95,52 @@ export async function getScriptsByAuthor(
 }
 
 /**
+ * 新着台本を取得する（createdAt 降順）。
+ */
+export async function getNewestScripts(limit = 8): Promise<ActionResult<SerializedScript[]>> {
+  try {
+    const db = getAdminDb();
+    const snap = await db
+      .collection("scripts")
+      .where("status", "==", "published")
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .get();
+    return {
+      success: true,
+      data: snap.docs.map((doc) => serializeScript(doc.data() as ScriptDoc, doc.id)),
+    };
+  } catch (err) {
+    console.error("[getNewestScripts] failed", err);
+    return { success: false, error: "新着台本の取得に失敗しました" };
+  }
+}
+
+/**
+ * 人気台本を取得する（stats.purchaseCount + favoriteCount 合算降順の簡易ロジック）。
+ * 厳密なスコアリングは P1-13 ranking ロジックで再計算する。
+ */
+export async function getPopularScripts(limit = 8): Promise<ActionResult<SerializedScript[]>> {
+  try {
+    const db = getAdminDb();
+    // Firestore は複合 orderBy が制約あるため、stats.favoriteCount 単体降順で簡易対応
+    const snap = await db
+      .collection("scripts")
+      .where("status", "==", "published")
+      .orderBy("stats.favoriteCount", "desc")
+      .limit(limit)
+      .get();
+    return {
+      success: true,
+      data: snap.docs.map((doc) => serializeScript(doc.data() as ScriptDoc, doc.id)),
+    };
+  } catch (err) {
+    console.error("[getPopularScripts] failed", err);
+    return { success: false, error: "人気台本の取得に失敗しました" };
+  }
+}
+
+/**
  * ジャンルが近い、または同じ作家の関連台本を取得する。
  * 簡易レコメンド（spec.md §11 関連台本レコメンドのフェーズ1版）。
  *
