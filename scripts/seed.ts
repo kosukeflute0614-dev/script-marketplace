@@ -231,7 +231,7 @@ function makeSynopsis(seed: string): string {
 
 const SEED_SCRIPTS: SeedScript[] = [
   {
-    id: "seed-script-romeo",
+    id: "seedRomeo",
     authorIdx: 0,
     title: "ロミオとジュリエット ― 或る夏の日の記憶",
     slug: "romeo-to-juliet-aru-natsu",
@@ -254,7 +254,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     authorComment: "夏の終わりの空気を大切に演じてください。",
   },
   {
-    id: "seed-script-summer-promise",
+    id: "seedSummer",
     authorIdx: 1,
     title: "夏の約束",
     slug: "natsu-no-yakusoku",
@@ -269,7 +269,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     feeSchedule: [{ condition: "高校演劇連盟公式大会", amount: 3000 }],
   },
   {
-    id: "seed-script-monologue",
+    id: "seedMono",
     authorIdx: 0,
     title: "星降る夜のモノローグ",
     slug: "hoshifuru-yoru-no-monologue",
@@ -282,7 +282,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     price: 500,
   },
   {
-    id: "seed-script-haiko",
+    id: "seedHaiko",
     authorIdx: 1,
     title: "廃校の教室にて",
     slug: "haiko-no-kyoshitsu-nite",
@@ -296,7 +296,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     price: 2000,
   },
   {
-    id: "seed-script-hamlet",
+    id: "seedHamlet",
     authorIdx: 2,
     title: "ハムレットの独白",
     slug: "hamlet-no-dokuhaku",
@@ -309,7 +309,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     price: 1800,
   },
   {
-    id: "seed-script-warai",
+    id: "seedWarai",
     authorIdx: 0,
     title: "笑いの果実",
     slug: "warai-no-kajitsu",
@@ -322,7 +322,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     price: 800,
   },
   {
-    id: "seed-script-mirai",
+    id: "seedMirai",
     authorIdx: 1,
     title: "未来からの手紙",
     slug: "mirai-kara-no-tegami",
@@ -336,7 +336,7 @@ const SEED_SCRIPTS: SeedScript[] = [
     isFreeFullText: true,
   },
   {
-    id: "seed-script-sakura",
+    id: "seedSakura",
     authorIdx: 2,
     title: "桜舞う季節",
     slug: "sakura-mau-kisetsu",
