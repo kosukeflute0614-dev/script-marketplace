@@ -2,9 +2,40 @@
 
 ## 現在のステータス
 
-**Pass**: Pass 1（APIキー受領前の作業）
-**Step**: P1-4 完了。次は P1-5「Step 7 台本詳細ページ」
+**Pass**: **Pass 1 完走 ✅** (P1-1 〜 P1-19 すべて完了)
+**次**: 社長から **Stripe / Algolia / Resend のAPIキー** を受領後、Pass 2 着手
 **開発計画書**: `docs/development-plan.md`
+
+## Pass 1 完走サマリ (2026-04-08)
+
+| Step | 内容 | commit |
+|---|---|---|
+| P1-1 | Step 3 認証・ユーザーID | f063198 |
+| P1-2 | Step 4 共通レイアウト | 3fb9250 |
+| P1-3 | seed スクリプト | 4bff6f1 |
+| P1-4 | Step 12 チャット基盤 + Firestore/Storage rules | 118d6e9 |
+| P1-5 | Step 7 台本詳細ページ + ユーザープロフィール | 8f86415 |
+| P1-6 | Step 8 PDFプレビュー | 588e428 |
+| P1-7 | Step 13 ヒアリングシート・相談 | b3669d6 |
+| P1-8 | Step 15 相談ステータス管理 | ce9d329 |
+| P1-9 | Step 16 レビュー | 6fe8010 |
+| P1-10 | Step 17 お気に入り・閲覧履歴 | 4deadb0 |
+| P1-11 | Step 18 メール通知 (Resend スタブ) | 0e9125f |
+| P1-12 | Step 19 トップページ | 66a2398 |
+| P1-13 | Step 20 ランキングロジック | 60b6b64 |
+| P1-14 | Step 21 関連レコメンド強化 | 002591e |
+| P1-15 | Step 22 管理画面 | 6661a8e |
+| P1-16 | Step 23 通報機能 | a1c6494 |
+| P1-17 | Step 24 SEO・パフォーマンス (sitemap/robots) | dc51002 |
+| P1-18 | Step 25 Firestore セキュリティルール最終化 | d5b4717 |
+| P1-19 | Step 27 Vitest テスト (4 files / 23 passed) | 65521e7 |
+
+最終確認:
+- ✅ `npm run lint` クリーン
+- ✅ `npx tsc --noEmit` クリーン
+- ✅ `npm run build` 成功
+- ✅ `npm run test:run` 23 / 23 passed
+- ✅ Firestore / Storage セキュリティルール deploy 済み
 
 ## 直近の作業内容（2026-04-08）
 
