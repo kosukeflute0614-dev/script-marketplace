@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
@@ -132,14 +133,28 @@ export async function getCurrentUser(): Promise<SerializedUser | null> {
 }
 
 /**
- * ログイン必須のページ・Server Action から呼ぶ。
- * 未ログインの場合は例外を投げる（Server Action 用）。
- * Server Component では `redirect("/login")` を直接呼ぶこと。
+ * ログイン必須の Server Action から呼ぶ。
+ * 未ログインの場合は例外を投げる（Server Action のエラー戻り値に変換する側で catch）。
  */
 export async function requireUser(): Promise<SerializedUser> {
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("ログインが必要です");
+  }
+  return user;
+}
+
+/**
+ * ログイン必須の Server Component から呼ぶ。
+ * 未ログインの場合は `/login` にリダイレクトする（redirect() は内部で NEXT_REDIRECT を throw）。
+ *
+ * (app)/layout.tsx で既に保護されているが、レイアウトとページの間に
+ * セッション失効が起きた場合の二重保護として使う。
+ */
+export async function requireUserOrRedirect(): Promise<SerializedUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login"); // never returns
   }
   return user;
 }

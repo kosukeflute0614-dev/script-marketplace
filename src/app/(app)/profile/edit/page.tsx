@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileEditForm } from "@/components/user/profile-edit-form";
-import { requireUser } from "@/lib/auth-server";
+import { requireUserOrRedirect } from "@/lib/auth-server";
 
 export const metadata = {
   title: "プロフィール編集 | 脚本マーケット",
@@ -8,8 +8,8 @@ export const metadata = {
 
 export default async function ProfileEditPage() {
   // (app)/layout.tsx で getCurrentUser を実行済みかつ未ログインなら /login にリダイレクト済み。
-  // ここでは requireUser（throw 版）を使い、念のためのフェイルセーフ + user 取得を行う。
-  const user = await requireUser();
+  // requireUserOrRedirect は二重保護用（NEXT_REDIRECT を投げる）
+  const user = await requireUserOrRedirect();
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-12">
       <h1 className="font-heading mb-6 text-2xl font-bold">プロフィール編集</h1>

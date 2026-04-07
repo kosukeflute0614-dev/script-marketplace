@@ -1,0 +1,38 @@
+rules_version = '2';
+
+// 脚本マーケット Storage セキュリティルール (Pass1 暫定版)
+//
+// 基本方針:
+// - 台本 PDF (scripts/{id}/...): クライアントから直接 read/write 禁止
+//   読み取りは Server Action getDownloadUrl が署名付き URL を発行する形（spec.md §18）
+// - サムネイル (scripts/{id}/thumbnail.*): 公開（published 台本の場合）
+// - ユーザーアイコン (users/{uid}/icon.*): 公開（プロフィール表示用）
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ----- scripts/* -----
+    match /scripts/{scriptId}/{allPaths=**} {
+      // クライアント read 禁止 (Server Action 経由で署名付き URL 発行)
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ----- thumbnails (将来用) -----
+    match /scripts/{scriptId}/thumbnail/{file} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ----- users/{uid}/icon -----
+    match /users/{uid}/icon/{file} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ----- それ以外 -----
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

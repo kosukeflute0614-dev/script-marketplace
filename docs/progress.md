@@ -3,10 +3,29 @@
 ## 現在のステータス
 
 **Pass**: Pass 1（APIキー受領前の作業）
-**Step**: P1-3 完了。次は P1-4「Step 12 チャット基盤」
+**Step**: P1-4 完了。次は P1-5「Step 7 台本詳細ページ」
 **開発計画書**: `docs/development-plan.md`
 
 ## 直近の作業内容（2026-04-07）
+
+### Pass 1 P1-4: フェーズ4 Step 12「チャット基盤」（完了）
+
+- ✅ Server Actions: `startChat` / `sendMessage` / `getMyChats` (`src/app/actions/chat.ts`)
+- ✅ 決定論的 chatId 方式（`[uidA, uidB].sort().join("_")`）+ Admin SDK の `create()` ALREADY_EXISTS catch で重複防止
+- ✅ `useChatMessages` hook — Firestore onSnapshot リアルタイム購読、Firebase Auth 認証状態確定後に subscribe
+- ✅ チャット一覧画面 (`(app)/chat/page.tsx`) と チャットルーム画面 (`(app)/chat/[chatId]/page.tsx`)
+- ✅ メッセージバブル UI（自分/相手の左右配置、text/system/特殊メッセージ分岐）
+- ✅ Server Component で参加者チェック → 不正アクセスは notFound
+- ✅ Firebase セキュリティルール初版を deploy
+  - `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`
+  - chats / messages の create はクライアント禁止（Server Actions 経由のみ）
+  - chats / messages の read は参加者のみ（onSnapshot 用に許可）
+  - users public read, scripts published public read, userIds は client write 禁止
+- ✅ `requireUserOrRedirect()` を新設して Server Component の認証フェイルセーフを統一（mypage/profile/edit/chat[id] 全てに適用）
+- ✅ フルレビュー: Critical 0 / High 2 / Medium 3 / Low 3 → High 全修正、Medium 1 (rules) も修正
+- ✅ 最終差分チェック: Critical 0 / High 0 クリーン
+- ✅ `npm run lint` / `npx tsc --noEmit` / `npm run build` 全 pass
+- ⏭ ブラウザテストは P1-5/P1-6 完了後にまとめて統合テスト
 
 ### Pass 1 P1-3: 開発用 seed スクリプト（完了）
 
