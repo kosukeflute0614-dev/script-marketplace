@@ -141,8 +141,13 @@ export async function getPopularScripts(limit = 8): Promise<ActionResult<Seriali
 }
 
 /**
- * ジャンルが近い、または同じ作家の関連台本を取得する。
- * 簡易レコメンド（spec.md §11 関連台本レコメンドのフェーズ1版）。
+ * 関連台本（コンテンツベースレコメンド / spec.md §11 フェーズ1版）。
+ *
+ * ロジック:
+ * 1. 同じジャンルを array-contains-any で広めに取得
+ * 2. ジャンルの一致数 + キャスト数の近さでスコア計算してソート
+ *    - score = ジャンル一致数 * 10 - キャスト数差の絶対値
+ * 3. 自分自身と同作家の台本は除外（同作家分は別セクションで表示）
  *
  * @param scriptId - 起点となる台本ID
  * @param limit - 最大件数
@@ -162,17 +167,32 @@ export async function getRelatedScripts(
     if (genres.length === 0) {
       return { success: true, data: [] };
     }
-    // 同じジャンルを1つ以上含む published な台本（自分自身は除く）
+
+    const baseCastTotal = (base.castTotal?.min ?? 0 + (base.castTotal?.max ?? 0)) / 2;
+
+    // 同じジャンルを1つ以上含む published な台本を取得
     const snap = await db
       .collection("scripts")
       .where("genres", "array-contains-any", genres.slice(0, 10))
       .where("status", "==", "published")
-      .limit(limit + 1)
+      .limit(40) // スコアリング前に多めに取得
       .get();
-    const items = snap.docs
+
+    const candidates = snap.docs
       .map((doc) => serializeScript(doc.data() as ScriptDoc, doc.id))
-      .filter((s) => s.id !== scriptId)
-      .slice(0, limit);
+      .filter((s) => s.id !== scriptId && s.authorUid !== base.authorUid);
+
+    // スコア計算
+    const scored = candidates.map((s) => {
+      const matchedGenres = (s.genres ?? []).filter((g) => genres.includes(g)).length;
+      const candidateCast = ((s.castTotal?.min ?? 0) + (s.castTotal?.max ?? 0)) / 2;
+      const castDiff = Math.abs(candidateCast - baseCastTotal);
+      const score = matchedGenres * 10 - castDiff;
+      return { script: s, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const items = scored.slice(0, limit).map((x) => x.script);
     return { success: true, data: items };
   } catch (err) {
     console.error("[getRelatedScripts] failed", err);
