@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { getRelatedScripts, getScript, getScriptsByAuthor } from "@/app/actions/scripts";
 import { getMyReview, getReviews } from "@/app/actions/review";
+import { isFavorite } from "@/app/actions/favorite";
+import { recordHistory } from "@/app/actions/history";
 import { ScriptDetail } from "@/components/script/script-detail";
 import { canonicalScriptPath, parseScriptHandle } from "@/lib/script-url";
 import { getCurrentUser } from "@/lib/auth-server";
@@ -109,18 +111,24 @@ export default async function ScriptPage({ params }: Props) {
   // ログインユーザーがこの台本を購入済みなら canReview = true
   let canReview = false;
   let myReview = null;
-  if (me && me.uid !== script.authorUid) {
-    const purchaseSnap = await getAdminDb()
-      .collection("purchases")
-      .where("buyerUid", "==", me.uid)
-      .where("scriptId", "==", script.id)
-      .limit(1)
-      .get();
-    canReview = !purchaseSnap.empty;
-    if (canReview) {
-      const myRes = await getMyReview(script.id);
-      if (myRes.success) myReview = myRes.data ?? null;
+  let isFavorited = false;
+  if (me) {
+    isFavorited = await isFavorite(script.id);
+    if (me.uid !== script.authorUid) {
+      const purchaseSnap = await getAdminDb()
+        .collection("purchases")
+        .where("buyerUid", "==", me.uid)
+        .where("scriptId", "==", script.id)
+        .limit(1)
+        .get();
+      canReview = !purchaseSnap.empty;
+      if (canReview) {
+        const myRes = await getMyReview(script.id);
+        if (myRes.success) myReview = myRes.data ?? null;
+      }
     }
+    // 閲覧履歴の記録 (fire-and-forget、エラーは無視)
+    void recordHistory(script.id);
   }
 
   // JSON-LD CreativeWork
@@ -159,6 +167,8 @@ export default async function ScriptPage({ params }: Props) {
         reviews={reviews}
         myReview={myReview}
         canReview={canReview}
+        isFavorited={isFavorited}
+        isLoggedIn={!!me}
       />
     </>
   );

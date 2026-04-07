@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { SerializedScript } from "@/app/actions/scripts";
 import { ScriptCard } from "@/components/script/script-card";
+import { FavoriteButton } from "@/components/script/favorite-button";
 import { ReviewList } from "@/components/review/review-list";
 import { ReviewForm } from "@/components/review/review-form";
 import { SCRIPT_TAG_DEFINITIONS } from "@/lib/script-tags";
@@ -20,6 +21,10 @@ type Props = {
   myReview: SerializedReview | null;
   /** ログインユーザーが購入済みなら true */
   canReview: boolean;
+  /** ログインユーザーがこの台本をお気に入り済みか */
+  isFavorited: boolean;
+  /** ログイン中なら true（FavoriteButton 表示制御） */
+  isLoggedIn: boolean;
 };
 
 const TAG_LABEL_MAP = new Map(SCRIPT_TAG_DEFINITIONS.map((t) => [t.id, t.label]));
@@ -31,6 +36,8 @@ export function ScriptDetail({
   reviews,
   myReview,
   canReview,
+  isFavorited,
+  isLoggedIn,
 }: Props) {
   const cast = `${script.castTotal.min === script.castTotal.max ? script.castTotal.min : `${script.castTotal.min}〜${script.castTotal.max}`}人`;
   const breakdown = `男${script.castBreakdown.male}/女${script.castBreakdown.female}/不問${script.castBreakdown.unspecified}`;
@@ -110,6 +117,13 @@ export function ScriptDetail({
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
+            {isLoggedIn ? (
+              <FavoriteButton
+                scriptId={script.id}
+                initialFavorited={isFavorited}
+                initialCount={script.stats.favoriteCount}
+              />
+            ) : null}
             <Button asChild variant="outline">
               <Link href={`/preview/${script.id}`}>プレビューを見る</Link>
             </Button>
