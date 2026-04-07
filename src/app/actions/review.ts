@@ -4,6 +4,8 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
+import { notify } from "@/lib/notifications";
+import { emailOnNewReview } from "@/lib/email-templates";
 import type { ReviewDoc, SerializedReview } from "@/types/review";
 
 import type { ActionResult } from "./auth";
@@ -121,11 +123,29 @@ export async function createReview(
       updatedAt: FieldValue.serverTimestamp(),
     });
     await recalculateScriptStats(scriptId);
-    return { success: true, data: { reviewId: me.uid } };
   } catch (err) {
     console.error("[createReview] failed", err);
     return { success: false, error: "レビューの投稿に失敗しました" };
   }
+
+  // 出品者へ通知 (onNewReview)
+  // script.title を取得するために再取得 (上の scriptSnap は authorUid のみ取り出した)
+  const fullScriptSnap = await db.collection("scripts").doc(scriptId).get();
+  const fullScript = fullScriptSnap.data() as { title?: string; authorUid?: string } | undefined;
+  if (fullScript?.authorUid && fullScript.authorUid !== me.uid) {
+    const authorSnap = await db.collection("users").doc(fullScript.authorUid).get();
+    const authorName = (authorSnap.data() as { displayName?: string } | undefined)?.displayName ?? "出品者";
+    const tpl = emailOnNewReview({
+      authorName,
+      reviewerName: me.displayName,
+      scriptTitle: fullScript.title ?? "",
+      scriptId,
+      rating: ratingResult,
+    });
+    void notify(fullScript.authorUid, "onNewReview", tpl.subject, tpl.html);
+  }
+
+  return { success: true, data: { reviewId: me.uid } };
 }
 
 /**

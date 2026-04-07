@@ -4,6 +4,8 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
+import { notify } from "@/lib/notifications";
+import { emailOnNewMessage } from "@/lib/email-templates";
 import { chatIdFor, type ChatDoc } from "@/types/chat";
 import type { ConsultationDoc } from "@/types/consultation";
 
@@ -153,6 +155,22 @@ export async function sendMessage(
   } catch (err) {
     console.error("[sendMessage] failed", err);
     return { success: false, error: "メッセージの送信に失敗しました" };
+  }
+
+  // 相手にメール通知 (onNewMessage / オンライン判定 + スロットリング)
+  const partnerUid = chatData.participants.find((uid) => uid !== me.uid);
+  if (partnerUid) {
+    const partnerName = chatData.participantNames[partnerUid] ?? "ユーザー";
+    const tpl = emailOnNewMessage({
+      recipientName: partnerName,
+      senderName: me.displayName,
+      preview: trimmedText.slice(0, 200),
+      chatId,
+    });
+    void notify(partnerUid, "onNewMessage", tpl.subject, tpl.html, {
+      isChatNotification: true,
+      throttleKey: `chat:${chatId}`,
+    });
   }
 
   return { success: true, data: { messageId: messageRef.id } };

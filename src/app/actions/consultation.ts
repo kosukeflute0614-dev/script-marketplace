@@ -4,13 +4,13 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
+import { notify } from "@/lib/notifications";
+import { emailOnNewMessage } from "@/lib/email-templates";
 import { chatIdFor } from "@/types/chat";
 import type { ConsultationDoc, ConsultationStatus } from "@/types/consultation";
 import type { ScriptDoc } from "@/types/script";
 
 import type { ActionResult } from "./auth";
-// NOTE: メール通知 (Resend) の呼び出しは P1-11 で追加する。
-//       Step 13 では Firestore 操作のみを実装し、通知トリガーポイントを TODO で記録する。
 
 /**
  * 上演許可の相談を作成する。spec.md §1-5b createConsultation。
@@ -162,8 +162,17 @@ export async function createConsultation(
     return { success: false, error: "相談の送信に失敗しました" };
   }
 
-  // TODO(P1-11): 作家へメール通知 (sendEmail with onPurchased を流用しないこと)
-  //              docs/notification-triggers.md に「createConsultation 後に onNewMessage 通知」を記録予定
+  // 作家へ「新着メッセージ」通知を送る（onNewMessage 設定 + オンライン判定 + スロットリング）
+  const tpl = emailOnNewMessage({
+    recipientName: authorDisplayName,
+    senderName: me.displayName,
+    preview: `『${script.title}』の上演許可について相談が届きました`,
+    chatId,
+  });
+  void notify(script.authorUid, "onNewMessage", tpl.subject, tpl.html, {
+    isChatNotification: true,
+    throttleKey: `chat:${chatId}`,
+  });
 
   return {
     success: true,

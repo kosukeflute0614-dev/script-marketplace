@@ -1,3 +1,4 @@
+import { Heartbeat } from "./heartbeat";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import type { SerializedUser } from "@/types/user";
@@ -10,6 +11,9 @@ type SiteShellProps = {
 /**
  * ヘッダー + メインコンテンツ + フッターの共通シェル。
  * (public)/layout.tsx と (app)/layout.tsx の通常画面パスから利用する。
+ *
+ * Heartbeat はログイン中ユーザーのオンライン判定 (spec.md §9) のため、
+ * user が存在するときだけマウントする。
  */
 export function SiteShell({ user, children }: SiteShellProps) {
   return (
@@ -17,6 +21,7 @@ export function SiteShell({ user, children }: SiteShellProps) {
       <SiteHeader user={user} />
       <main className="flex-1">{children}</main>
       <SiteFooter />
+      {user ? <Heartbeat /> : null}
     </div>
   );
 }
