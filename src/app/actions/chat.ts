@@ -5,6 +5,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
 import { chatIdFor, type ChatDoc } from "@/types/chat";
+import type { ConsultationDoc } from "@/types/consultation";
 
 import type { ActionResult } from "./auth";
 
@@ -81,10 +82,8 @@ export async function startChat(targetUid: string): Promise<ActionResult<{ chatI
  * - チャット参加者でなければ拒否
  * - messages サブコレクションに追加
  * - 親 chats ドキュメントの lastMessage / lastMessageAt / lastMessageBy を更新
- *
- * NOTE: 仕様上、作家が初めて text を送信した時に該当 consultation の作家側 status を
- * unresponded → in_progress に自動遷移する必要があるが、それは P1-7 (Step13) で
- * consultation.ts と一緒に実装する。ここでは text 送信のみ。
+ * - **作家が初めて text を送信した時**に該当 consultation の作家側 status を
+ *   unresponded → in_progress に自動遷移する (spec.md §1-5 sendMessage 補足)
  */
 export async function sendMessage(
   chatId: string,
@@ -116,7 +115,15 @@ export async function sendMessage(
     return { success: false, error: "このチャットに参加していません" };
   }
 
-  // メッセージ作成 + 親ドキュメント更新を一括で
+  // 自分が作家として参加している consultation を検索（unresponded のものだけ status 更新）
+  // chatId == ? AND authorUid == me.uid で取れる
+  const myAuthorConsultationsSnap = await db
+    .collection("consultations")
+    .where("chatId", "==", chatId)
+    .where("authorUid", "==", me.uid)
+    .get();
+
+  // メッセージ作成 + 親ドキュメント更新 + consultation status 更新を 1 batch で
   const messageRef = chatRef.collection("messages").doc();
   const batch = db.batch();
   batch.set(messageRef, {
@@ -130,6 +137,16 @@ export async function sendMessage(
     lastMessageAt: FieldValue.serverTimestamp(),
     lastMessageBy: me.uid,
   });
+
+  // 「初回返信」: 作家側 status が unresponded のものを in_progress に遷移
+  for (const cdoc of myAuthorConsultationsSnap.docs) {
+    const cdata = cdoc.data() as ConsultationDoc;
+    if (cdata.status?.[me.uid] === "unresponded") {
+      batch.update(cdoc.ref, {
+        [`status.${me.uid}`]: "in_progress",
+      });
+    }
+  }
 
   try {
     await batch.commit();
