@@ -199,6 +199,27 @@ export function ScriptDetail({
         </Section>
       ) : null}
 
+      {/* ランキング */}
+      {script.rankings && Object.keys(script.rankings).length > 0 ? (
+        <Section title="ランキング">
+          <ul className="text-foreground space-y-1 text-sm">
+            {Object.entries(script.rankings).map(([category, info]) => {
+              const label = category.startsWith("genre:")
+                ? category.replace("genre:", "")
+                : category.startsWith("audience:")
+                  ? category.replace("audience:", "")
+                  : category;
+              return (
+                <li key={category}>
+                  {label} 部門: <span className="font-medium">{info.rank}位</span>
+                  <span className="text-muted-foreground"> / {info.total}作品中</span>
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+      ) : null}
+
       {/* レビュー */}
       <Section
         title={
