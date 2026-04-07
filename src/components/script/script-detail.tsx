@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import type { SerializedScript } from "@/app/actions/scripts";
 import { ScriptCard } from "@/components/script/script-card";
 import { FavoriteButton } from "@/components/script/favorite-button";
+import { ReportButton } from "@/components/script/report-button";
 import { ReviewList } from "@/components/review/review-list";
 import { ReviewForm } from "@/components/review/review-form";
 import { SCRIPT_TAG_DEFINITIONS } from "@/lib/script-tags";
@@ -136,9 +137,14 @@ export function ScriptDetail({
         <p className="text-muted-foreground text-xs">
           上演許可の相談: {script.stats.consultationCount}件
         </p>
-        <Button asChild variant="ghost" size="sm" className="mt-1 -ml-2">
-          <Link href={`/hearing-sheet/${script.id}`}>上演許可の相談をする →</Link>
-        </Button>
+        <div className="-ml-2 mt-1 flex flex-wrap items-center gap-1">
+          <Button asChild variant="ghost" size="sm">
+            <Link href={`/hearing-sheet/${script.id}`}>上演許可の相談をする →</Link>
+          </Button>
+          {isLoggedIn ? (
+            <ReportButton targetType="script" targetId={script.id} size="sm" />
+          ) : null}
+        </div>
       </div>
 
       <Separator className="my-8" />
