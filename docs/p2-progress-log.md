@@ -138,3 +138,11 @@
 - 16:30 [実装] invoice.ts (createInvoice/payInvoice/cancelInvoice/getInvoicesByChat/handleInvoicePaymentWebhook)
 - 16:30 [実装] webhook route.ts に invoice_payment ハンドラ配線
 - 16:30 npm run lint/tsc/build pass → commit
+- 16:35 [P2-6] ✅ 完了 (commit fe298a3)
+
+## P2-7 Resend スタブを実物に差し替え
+
+- 16:40 [実装] lib/resend.ts をスタブ → Resend SDK 呼び出しに置き換え
+  - RESEND_API_KEY 未設定時はフォールバック (console.log のみ)
+  - シグネチャ変更なし (呼び出し側の修正不要)
+- 16:40 npm run tsc/build pass → commit
