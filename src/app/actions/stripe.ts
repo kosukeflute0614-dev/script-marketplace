@@ -64,9 +64,12 @@ export async function createConnectAccount(): Promise<ActionResult<{ clientSecre
           // ユーザーが迷わないように事前入力できるフィールドを埋めておく
           business_profile: {
             // MCC 5815: デジタルコンテンツ（メディア・書籍・音楽）
-            // 脚本マーケットは PDF 台本のオンライン販売 + 上演許可料の決済なのでこれが最適
             mcc: "5815",
-            url: APP_URL,
+            // Stripe は localhost URL を拒否するため、開発時はプレースホルダーを使う
+            // 本番デプロイ時に実際の URL に差し替える
+            url: APP_URL.startsWith("http://localhost")
+              ? "https://script-marketplace.example.com"
+              : APP_URL,
             product_description:
               "脚本マーケットで演劇台本（PDF）の販売および上演許可料の決済を行っています。",
           },
