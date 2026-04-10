@@ -116,17 +116,42 @@ function validateInput(input: ScriptFormInput): string | null {
 // スラッグ確保
 // ----------------------------------------------------------------------------
 
-async function reserveSlug(rawBase: string): Promise<string> {
+/**
+ * スラッグを slugs 補助コレクションで予約する。
+ * userIds と同じパターンで、Firestore の create() による排他制御で一意性を担保する。
+ *
+ * @returns 確保した slug (重複時は連番付き)
+ */
+async function reserveSlug(rawBase: string, scriptId: string): Promise<string> {
   const base = generateSlug(rawBase);
   const db = getAdminDb();
+  // base, base-2, base-3 ... を順に試す
   for (const candidate of slugCandidates(base)) {
-    // eslint-disable-next-line no-await-in-loop
-    const dup = await db.collection("scripts").where("slug", "==", candidate).limit(1).get();
-    if (dup.empty) return candidate;
+    const slugRef = db.collection("slugs").doc(candidate);
+    try {
+      await slugRef.create({
+        scriptId,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      return candidate;
+    } catch (err) {
+      const code = (err as { code?: number | string } | null)?.code;
+      if (code === 6 || code === "already-exists") {
+        continue;
+      }
+      throw err;
+    }
   }
-  // フォールバック: タイムスタンプ付与
-  return `${base}-${Date.now().toString(36)}`;
+  // 999 件まで埋まることはないが、保険として scriptId 末尾を結合
+  const fallback = `${base}-${scriptId.slice(0, 6)}`;
+  await db.collection("slugs").doc(fallback).set({
+    scriptId,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  return fallback;
 }
+
+const VALID_CUSTOM_SLUG_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
 // ----------------------------------------------------------------------------
 // PDF アップロード
@@ -134,12 +159,17 @@ async function reserveSlug(rawBase: string): Promise<string> {
 
 async function uploadPdfFromForm(file: File, scriptId: string, version: number): Promise<string> {
   if (file.size > MAX_PDF_BYTES) {
-    throw new Error(`PDF サイズが上限 (${MAX_PDF_BYTES / 1024 / 1024}MB) を超えています`);
+    throw new Error(`PDF サイズが上限 30MB を超えています`);
   }
-  if (file.type && file.type !== "application/pdf") {
-    throw new Error("アップロード可能なのは PDF ファイルのみです");
+  // file.type が空のケース (一部ブラウザ・プログラム送信) も含めて拒否
+  if (file.type !== "application/pdf") {
+    throw new Error("アップロード可能なのは PDF ファイルのみです (Content-Type: application/pdf)");
   }
+  // マジックバイト検証: PDF ファイルは "%PDF-" で始まる
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.length < 5 || buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    throw new Error("PDF ファイルの形式が不正です");
+  }
   const path = `scripts/${scriptId}/v${version}/script.pdf`;
   const bucket = getAdminStorage().bucket();
   await bucket.file(path).save(buffer, {
@@ -221,7 +251,20 @@ export async function createScript(formData: FormData): Promise<ActionResult<{ i
   }
 
   // 5. スラッグ確保
-  const slug = await reserveSlug(input.slug && input.slug.trim() ? input.slug : input.title);
+  // カスタムスラッグが指定されている場合は形式チェック
+  if (input.slug && input.slug.trim()) {
+    const customSlug = input.slug.trim().toLowerCase();
+    if (!VALID_CUSTOM_SLUG_REGEX.test(customSlug)) {
+      return {
+        success: false,
+        error: "カスタムスラッグは半角英数字（小文字）とハイフンのみで指定してください",
+      };
+    }
+  }
+  const slug = await reserveSlug(
+    input.slug && input.slug.trim() ? input.slug.trim().toLowerCase() : input.title,
+    scriptId,
+  );
 
   // 6. ドキュメント作成
   const castTotal: CastTotal = { min: input.castMin, max: input.castMax };
@@ -341,10 +384,41 @@ export async function updateScript(
   if (input.targetAudience !== undefined) update.targetAudience = input.targetAudience;
   if (input.themeTags !== undefined) update.themeTags = input.themeTags;
   if (input.scriptTags !== undefined) update.scriptTags = input.scriptTags;
-  if (input.castMin !== undefined && input.castMax !== undefined) {
+  // castTotal と castBreakdown は同時に更新する場合のみ受け付ける。
+  // 片方だけだと整合性 (合計 = max) が崩れるため。
+  const castFieldsTouched =
+    input.castMin !== undefined ||
+    input.castMax !== undefined ||
+    input.castMale !== undefined ||
+    input.castFemale !== undefined ||
+    input.castUnspecified !== undefined;
+  if (castFieldsTouched) {
+    if (
+      input.castMin === undefined ||
+      input.castMax === undefined ||
+      input.castMale === undefined ||
+      input.castFemale === undefined ||
+      input.castUnspecified === undefined
+    ) {
+      return {
+        success: false,
+        error: "キャスト関連は最小・最大・男女不問の5項目すべてを同時に指定してください",
+      };
+    }
+    if (input.castMax < input.castMin || input.castMin < 1) {
+      return { success: false, error: "キャスト人数の値が不正です" };
+    }
+    const sum =
+      Math.max(0, input.castMale) +
+      Math.max(0, input.castFemale) +
+      Math.max(0, input.castUnspecified);
+    if (sum !== input.castMax) {
+      return {
+        success: false,
+        error: "キャスト構成 (男+女+不問) は最大人数と一致させてください",
+      };
+    }
     update.castTotal = { min: input.castMin, max: input.castMax };
-  }
-  if (input.castMale !== undefined && input.castFemale !== undefined && input.castUnspecified !== undefined) {
     update.castBreakdown = {
       male: input.castMale,
       female: input.castFemale,
@@ -513,7 +587,8 @@ export async function getMyScripts(): Promise<ActionResult<MyScriptListItem[]>> 
   const revenueByScript = new Map<string, number>();
   for (const p of purchaseSnap.docs) {
     const d = p.data() as { scriptId?: string; amount?: number };
-    if (!d.scriptId || !d.amount) continue;
+    if (!d.scriptId || typeof d.amount !== "number") continue;
+    // 無料台本 (amount=0) も加算対象だが結果に影響なし。明示的に数値型のみ受け付ける。
     revenueByScript.set(d.scriptId, (revenueByScript.get(d.scriptId) ?? 0) + d.amount);
   }
 

@@ -58,7 +58,7 @@ export function MyScriptsList({ items }: Props) {
                 ¥{s.price.toLocaleString()} · v{s.currentVersion} ·{" "}
                 <span
                   className={
-                    s.status === "published" ? "text-foreground" : "text-destructive"
+                    s.status === "published" ? "text-foreground" : "text-muted-foreground"
                   }
                 >
                   {s.status === "published" ? "公開中" : "非公開"}
