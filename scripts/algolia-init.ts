@@ -96,12 +96,17 @@ const MAIN_SETTINGS = {
   replicas: REPLICAS,
 };
 
+// レプリカ用の共通設定（attributesForFaceting は親から自動継承されないため明示）
+const REPLICA_COMMON_SETTINGS = {
+  attributesForFaceting: MAIN_SETTINGS.attributesForFaceting,
+};
+
 // レプリカ別の ranking 設定
-const REPLICA_SETTINGS: Record<string, { customRanking?: string[]; ranking?: string[] }> = {
-  scripts_newest: { customRanking: ["desc(createdAt)"] },
-  scripts_price_asc: { customRanking: ["asc(price)", "desc(favoriteCount)"] },
-  scripts_price_desc: { customRanking: ["desc(price)", "desc(favoriteCount)"] },
-  scripts_rating: { customRanking: ["desc(reviewAverage)", "desc(reviewCount)"] },
+const REPLICA_SETTINGS: Record<string, Record<string, unknown>> = {
+  scripts_newest: { ...REPLICA_COMMON_SETTINGS, customRanking: ["desc(createdAt)"] },
+  scripts_price_asc: { ...REPLICA_COMMON_SETTINGS, customRanking: ["asc(price)", "desc(favoriteCount)"] },
+  scripts_price_desc: { ...REPLICA_COMMON_SETTINGS, customRanking: ["desc(price)", "desc(favoriteCount)"] },
+  scripts_rating: { ...REPLICA_COMMON_SETTINGS, customRanking: ["desc(reviewAverage)", "desc(reviewCount)"] },
 };
 
 async function setMainSettings() {
