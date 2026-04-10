@@ -63,11 +63,12 @@ export async function createConnectAccount(): Promise<ActionResult<{ clientSecre
           metadata: { uid: me.uid },
           // ユーザーが迷わないように事前入力できるフィールドを埋めておく
           business_profile: {
-            // MCC 7922: 演劇プロデューサー・チケット代理店
-            mcc: "7922",
+            // MCC 5815: デジタルコンテンツ（メディア・書籍・音楽）
+            // 脚本マーケットは PDF 台本のオンライン販売 + 上演許可料の決済なのでこれが最適
+            mcc: "5815",
             url: APP_URL,
             product_description:
-              "脚本マーケットで演劇台本を出品・販売しています。",
+              "脚本マーケットで演劇台本（PDF）の販売および上演許可料の決済を行っています。",
           },
           individual: {
             email: me.email,
