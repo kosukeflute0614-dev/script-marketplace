@@ -62,10 +62,26 @@ export function StripeSetupCard({ stripeOnboarded, hasStripeAccount }: Props) {
 
       const onboardingElement = connectInstance.create("account-onboarding");
       onboardingElement.setOnExit(() => {
+        // Stripe 側のステータス反映に数秒かかる場合があるため、
+        // 少し待ってからリトライ付きで同期する
         startTransition(async () => {
-          await syncStripeAccountStatus();
+          toast.info("Stripe の状態を確認中…");
+          let synced = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            // 1回目: 2秒待ち、2回目: 4秒、3回目: 6秒
+            await new Promise((r) => setTimeout(r, (attempt + 1) * 2000));
+            const result = await syncStripeAccountStatus();
+            if (result.success && result.data?.stripeOnboarded) {
+              synced = true;
+              break;
+            }
+          }
           router.refresh();
-          toast.success("Stripe 連携の状態を更新しました");
+          if (synced) {
+            toast.success("Stripe 連携が完了しました！出品が可能です。");
+          } else {
+            toast.info("反映に時間がかかっています。数秒後にページを再読み込みしてください。");
+          }
         });
       });
 
