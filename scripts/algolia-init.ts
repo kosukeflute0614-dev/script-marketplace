@@ -67,12 +67,14 @@ const MAIN_SETTINGS = {
     "unordered(synopsis)",
     "unordered(authorDisplayName)",
   ],
+  // useRefinementList (UI に件数を出す) ファセットは filterOnly ではなく通常指定。
+  // filterOnly は「UI に表示不要だがフィルタとして使う」属性のみに使う。
   attributesForFaceting: [
-    "filterOnly(genres)",
-    "filterOnly(performanceType)",
-    "filterOnly(targetAudience)",
+    "genres",                   // useRefinementList (UI 表示)
+    "performanceType",          // useRefinementList (UI 表示)
+    "targetAudience",           // useRefinementList (UI 表示)
+    "scriptTags",               // useRefinementList (UI 表示)
     "filterOnly(themeTags)",
-    "filterOnly(scriptTags)",
     "filterOnly(badges)",
     "filterOnly(price)",
     "filterOnly(feeScheduleMin)",

@@ -106,4 +106,9 @@
   - BUG-A: NumericRange → NumericFacetGroup (キャスト人数をプリセット範囲に、上演料は一旦削除)
   - BUG-B: 画像コンテナに overflow-hidden 追加 (search-hits + script-card)
   - BUG-C: (SSR/hydration 起因、追加修正なし — BUG-A の修正で全件表示されればフィルター状態も安定する見込み)
-- 14:50 npm run lint/tsc/build 全 pass → commit して再テスト
+- 14:50 npm run lint/tsc/build 全 pass → commit (9a57271)
+- 14:55 再テスト: TC-1r PASS (18件), TC-5r PASS. TC-3r/4r FAIL (新バグ)
+  - TC-3r: useRefinementList.items が空 (filterOnly ファセットは件数を返さない)
+  - TC-4r: scripts_newest レプリカが 0 件 (レプリカの伝搬タイミング問題?)
+- 15:00 [修正] algolia-init.ts のファセット設定を修正 (genres/performanceType/targetAudience/scriptTags を filterOnly → 通常ファセットに)
+- 15:05 algolia-init 再実行 → genres ファセット + scripts_newest レプリカ動作確認 OK → commit + 再テスト
