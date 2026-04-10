@@ -118,5 +118,26 @@
 
 ---
 
+## BUG-008: PDFプレビューページで `Object.defineProperty called on non-object`
+
+- **発見日**: 2026-04-10
+- **発見者**: 社長（実機確認）
+- **ページ**: `/preview/[scriptId]`
+- **症状**: プレビューページを開くと `Object.defineProperty called on non-object` の RuntimeTypeError
+- **原因**: `react-pdf` が内部で使う `pdfjs-dist` はブラウザ専用 API（`globalThis.window` 等）に依存する。Next.js の Server Component からそのまま import すると、SSR 時（Node.js）で `pdfjs-dist` のモジュール初期化コードが走り、ブラウザ上にしか存在しないオブジェクトに `defineProperty` しようとして爆発する
+- **修正**:
+  - `PdfPreviewLoader` という Client Component ラッパーを新規作成 (`"use client"`)
+  - その中で `next/dynamic` + `ssr: false` を使って `PdfPreview` を遅延読み込み
+  - Server Component (page.tsx) は `PdfPreviewLoader` だけを import する
+  - ※ Next.js 15 では Server Component 内で直接 `dynamic({ ssr: false })` が使えないため、Client Component でラップする必要がある
+- **なぜテストで防げなかったか**:
+  - `npm run build` は webpack バンドルとページプリレンダリングを行うが、`/preview/[scriptId]` は動的ページ（`params` 依存）のためビルド時にプリレンダリングされず、SSR エラーが顕在化しなかった
+  - Vitest は Next.js webpack を経由しないため pdfjs-dist の互換性問題は対象外
+  - @browser-tester は P1-6 時に placeholder PDF で動作確認済みだったが、その時はたまたまクライアント JS のみで動作していた可能性（SSR パスとの競合タイミング依存）
+  - `react-pdf` + Next.js App Router の `ssr: false` 必須パターンは公式ドキュメントに明記されているが見落とした
+- **再発防止**: ブラウザ専用ライブラリ（pdfjs-dist, canvas 系, WebGL 系）を使う場合は必ず `dynamic({ ssr: false })` で Client Component から読み込む
+
+---
+
 ## (以下、社長の動作確認で新たに発見されたバグを追記)
 

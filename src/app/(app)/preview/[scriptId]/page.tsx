@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getPreviewInfo } from "@/app/actions/preview";
-import { PdfPreview } from "@/components/preview/pdf-preview";
+import { PdfPreviewLoader } from "@/components/preview/pdf-preview-loader";
 
 export const metadata = {
   title: "プレビュー | 脚本マーケット",
@@ -26,7 +26,7 @@ export default async function PreviewPage({ params }: Props) {
   }
   const info = result.data;
   return (
-    <PdfPreview
+    <PdfPreviewLoader
       scriptId={info.scriptId}
       pdfUrl={info.pdfUrl}
       maxPages={info.maxPages}
