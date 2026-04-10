@@ -1,10 +1,40 @@
 # 脚本マーケット 進捗管理
 
-## 現在のステータス
+## 現在のステータス（2026-04-10 セッション終了時点）
 
-**Pass**: **Pass 1 完走 ✅** (P1-1 〜 P1-19 すべて完了)
-**次**: 社長から **Stripe / Algolia / Resend のAPIキー** を受領後、Pass 2 着手
+**Pass 1**: ✅ 完走（P1-1 〜 P1-19）
+**Pass 2**: ✅ P2-1 〜 P2-8, P2-10 完了。**P2-9（デプロイ）のみ社長判断待ち**
+**バグ修正**: 社長の動作確認で BUG-007 〜 BUG-012 を発見・修正済み
+**UX 改善**: Stripe Embedded Onboarding に切り替え済み
+
 **開発計画書**: `docs/development-plan.md`
+**バグ記録**: `docs/bug-log.md`（12件記録、全件修正済み）
+**リアルタイムログ**: `docs/p2-progress-log.md`
+
+### 次のセッションでやること
+
+1. **P2-9 デプロイ準備**（社長との判断事項あり）
+   - Firebase App Hosting セットアップ
+   - 独自ドメインを使うか / Firebase デフォルトドメイン (`xxx.web.app`) でいくか
+   - 本番用 Stripe キー / Algolia / Resend の切替
+2. **社長の動作確認の続行**
+   - まだ触っていないページ: チャット、相談管理、管理画面、ヒアリングシート、レビュー
+   - 新しいバグが見つかったら `docs/bug-log.md` に追記して修正
+3. **法的ドキュメント作成**（社長作業）: 利用規約、プライバシーポリシー、特商法表記
+
+### 環境情報（次回セッション用）
+
+- **Firebase プロジェクト**: `script-marcketplace` (typo 含みだがこれが正式 ID)
+- **Stripe アカウント**: Connect 有効化済み、Embedded Onboarding 実装済み
+- **Algolia**: `UFORCDN32P` / scripts インデックス + 4 レプリカ / 18 records
+- **Resend**: 実 SDK 接続済み (`onboarding@resend.dev` で送信)
+- **テストユーザー**: `test-user@example.com` / `TestPass123!` (isAdmin=true)
+- **社長アカウント**: `kosuke.flute0614@gmail.com` (stripeOnboarded=true に手動設定済み)
+- **Firestore indexes**: 14 個 deploy 済み
+- **Firestore rules + Storage rules**: deploy 済み
+- **dev サーバ起動方法**: `npm run dev` (port 3000)
+- **Stripe webhook**: `stripe listen --api-key sk_test_... --forward-to localhost:3000/api/webhooks/stripe`
+- **`.next` キャッシュ問題**: `npm run build` 後は `rm -rf .next` してから `npm run dev` すること
 
 ## Pass 1 完走サマリ (2026-04-08)
 
