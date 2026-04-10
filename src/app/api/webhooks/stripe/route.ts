@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
+import { handlePurchaseWebhook } from "@/app/actions/purchase";
 import type Stripe from "stripe";
 
 // Next.js Route Handler の設定
@@ -39,22 +40,18 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Invalid signature", { status: 400 });
   }
 
-  // 冪等性チェック (events コレクションに event.id を保存)
+  // 冪等性チェック:
+  // 各ハンドラ自体が冪等に設計されている (purchases 重複チェック、set merge:true 等)。
+  // stripeEvents コレクションは処理完了 **後** に書き込む。
+  // こうすることで「ハンドラ失敗 → Stripe リトライ → stripeEvents に already-exists で弾かれる」
+  // という Critical な状況を防ぐ。
   const db = getAdminDb();
   const eventRef = db.collection("stripeEvents").doc(event.id);
-  try {
-    await eventRef.create({
-      type: event.type,
-      receivedAt: FieldValue.serverTimestamp(),
-    });
-  } catch (err) {
-    const code = (err as { code?: number | string } | null)?.code;
-    if (code === 6 || code === "already-exists") {
-      // 既に処理済み
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-    console.error("[stripe-webhook] event log create failed", err);
-    return new NextResponse("Event log error", { status: 500 });
+
+  // まず既に処理済みかチェック (get のみ、create はまだしない)
+  const eventSnap = await eventRef.get();
+  if (eventSnap.exists && (eventSnap.data() as { processed?: boolean })?.processed === true) {
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -63,18 +60,27 @@ export async function POST(req: NextRequest) {
         await handleAccountUpdated(event);
         break;
       case "checkout.session.completed":
-        // P2-5 (台本購入) と P2-6 (請求支払い) で実装する
-        // 現時点ではログだけ出して成功扱い
-        console.log("[stripe-webhook] checkout.session.completed (handler deferred to P2-5/P2-6)");
+        await handleCheckoutCompleted(event);
         break;
       default:
-        // 未対応イベントは ack だけして無視
         console.log(`[stripe-webhook] unhandled event type: ${event.type}`);
     }
   } catch (err) {
     console.error(`[stripe-webhook] handler error for ${event.type}`, err);
-    // Stripe にリトライしてもらえるよう 500 を返す。冪等チェックがあるので重複処理は安全。
+    // ハンドラ失敗 → 500 を返して Stripe にリトライさせる
+    // stripeEvents は書き込まないので、次回リトライ時にハンドラが再実行される
     return new NextResponse("Handler error", { status: 500 });
+  }
+
+  // ハンドラ成功後に processed: true で記録 (次回リトライ時にスキップ)
+  try {
+    await eventRef.set({
+      type: event.type,
+      processed: true,
+      processedAt: FieldValue.serverTimestamp(),
+    });
+  } catch {
+    // ログ書き込み失敗は致命的ではない (ハンドラ自体は冪等)
   }
 
   return NextResponse.json({ received: true });
@@ -113,4 +119,36 @@ async function handleAccountUpdated(event: Stripe.Event) {
   console.log(
     `[stripe-webhook] account.updated synced uid=${uid} accountId=${account.id} onboarded=${onboarded}`,
   );
+}
+
+/**
+ * checkout.session.completed イベントの処理
+ * metadata.type で購入 / 請求支払い を分岐する。
+ */
+async function handleCheckoutCompleted(event: Stripe.Event) {
+  const session = event.data.object as Stripe.Checkout.Session;
+  const metadata = session.metadata ?? {};
+  const type = metadata.type;
+
+  if (type === "purchase") {
+    await handlePurchaseWebhook({
+      scriptId: metadata.scriptId ?? "",
+      buyerUid: metadata.buyerUid ?? "",
+      authorUid: metadata.authorUid ?? "",
+      amount: metadata.amount ?? "0",
+      platformFee: metadata.platformFee ?? "0",
+      stripePaymentIntentId:
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id ?? "",
+    });
+    console.log(
+      `[stripe-webhook] purchase completed script=${metadata.scriptId} buyer=${metadata.buyerUid}`,
+    );
+  } else if (type === "invoice_payment") {
+    // P2-6 で実装
+    console.log("[stripe-webhook] invoice_payment completed (handler deferred to P2-6)");
+  } else {
+    console.warn(`[stripe-webhook] checkout.session.completed with unknown type: ${type}`);
+  }
 }

@@ -111,4 +111,19 @@
   - TC-3r: useRefinementList.items が空 (filterOnly ファセットは件数を返さない)
   - TC-4r: scripts_newest レプリカが 0 件 (レプリカの伝搬タイミング問題?)
 - 15:00 [修正] algolia-init.ts のファセット設定を修正 (genres/performanceType/targetAudience/scriptTags を filterOnly → 通常ファセットに)
-- 15:05 algolia-init 再実行 → genres ファセット + scripts_newest レプリカ動作確認 OK → commit + 再テスト
+- 15:05 algolia-init 再実行 → genres ファセット + scripts_newest レプリカ動作確認 OK → commit (77e85a3)
+- 15:10 再テスト (2回目): TC-3r PASS, TC-4r FAIL (レプリカに attributesForFaceting なし)
+- 15:15 [修正] レプリカにも attributesForFaceting を明示設定 → commit (007a211)
+- 15:20 最終テスト: TC-4r PASS
+- 15:20 [P2-4] 全 TC PASS → 最終差分チェック不要 (修正のみで新規実装なし) → ✅ 完了
+
+## P2-5 台本購入 (createCheckoutSession + Webhook)
+
+- 15:25 [P2-5] 実装開始
+- 15:40 [実装] purchase.ts (createCheckoutSession/createFreePurchase/getDownloadUrl/getMyPurchases/handlePurchaseWebhook)
+- 15:40 [実装] webhook route.ts の checkout.session.completed ハンドラ
+- 15:40 [実装] checkout/[scriptId]/page, checkout/success/page, mypage/purchased/page
+- 15:40 npm run lint/tsc/build pass → フルレビュー開始
+- 16:00 [修正] Critical (冪等チェック順序): stripeEvents を handler 成功後に書き込むよう変更
+- 16:00 [修正] Medium (purchased-list URL): 短縮URL形式に + Webhook遅延注釈追加
+- 16:00 [P2-5] 再レビュー開始
