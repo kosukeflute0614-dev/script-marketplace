@@ -128,7 +128,17 @@ export function ScriptDetail({
             <Button asChild variant="outline">
               <Link href={`/preview/${script.id}`}>プレビューを見る</Link>
             </Button>
-            <Button disabled title="購入機能は Pass2 で実装">購入する（準備中）</Button>
+            {isLoggedIn ? (
+              <Button asChild>
+                <Link href={`/checkout/${script.id}`}>
+                  {script.price === 0 ? "無料で取得する" : `¥${script.price.toLocaleString()} で購入する`}
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href={`/login?redirect=/checkout/${script.id}`}>ログインして購入</Link>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
