@@ -61,6 +61,18 @@ export async function createConnectAccount(): Promise<ActionResult<{ clientSecre
           },
           business_type: "individual",
           metadata: { uid: me.uid },
+          // ユーザーが迷わないように事前入力できるフィールドを埋めておく
+          business_profile: {
+            // MCC 7922: 演劇プロデューサー・チケット代理店
+            mcc: "7922",
+            url: APP_URL,
+            product_description:
+              "脚本マーケットで演劇台本を出品・販売しています。",
+          },
+          individual: {
+            email: me.email,
+            first_name_kanji: me.displayName,
+          },
         });
         accountId = account.id;
       }
