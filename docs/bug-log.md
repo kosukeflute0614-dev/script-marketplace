@@ -101,5 +101,22 @@
 
 ---
 
+## BUG-007: 検索ボックスで日本語 IME 入力が壊れる（「春」→「HあRう」になる）
+
+- **発見日**: 2026-04-10
+- **発見者**: 社長（実機確認）
+- **ページ**: `/search`
+- **症状**: 検索ボックスに日本語を入力しようとすると、IME 変換中にキーストロークが分断される。「春」と打ちたいのに「HあRう」になる
+- **原因**: `useSearchBox` の `refine()` が `onChange` のたびに即座に呼ばれ、IME の composing 状態を無視して Algolia に中間値を送信。Algolia がクエリ結果を返すたびに React が input の `value` を上書きし、IME の変換候補がリセットされる
+- **修正**: `onCompositionStart` / `onCompositionEnd` イベントで IME 変換中フラグ (`isComposing`) を管理。変換中は `refine` を呼ばず `localValue` state だけ更新、変換確定時に一括で `refine` を実行する方式に変更
+- **なぜテストで防げなかったか**:
+  - @browser-tester (Playwright) は `page.fill()` や `page.type()` で入力するが、これらは IME を経由しない直接入力 → IME 変換の問題は再現しない
+  - Vitest は DOM を持たないため入力イベントをテストできない
+  - React + IME の競合は **実際に日本語キーボードで入力しないと発覚しない** 典型的なバグで、自動テストでの検出が構造的に困難
+  - 日本語対応のサービスを開発する場合、`<input>` / `<textarea>` に `value` + `onChange` を使う箇所はすべて IME 対応が必要と認識すべきだった
+- **再発防止**: テキスト入力コンポーネントでは `onCompositionStart` / `onCompositionEnd` を標準装備する。Algolia の `useSearchBox` を直接 `<input onChange>` に接続する場合は必ず IME ガードを入れる
+
+---
+
 ## (以下、社長の動作確認で新たに発見されたバグを追記)
 
