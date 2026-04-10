@@ -146,3 +146,15 @@
   - RESEND_API_KEY 未設定時はフォールバック (console.log のみ)
   - シグネチャ変更なし (呼び出し側の修正不要)
 - 16:40 npm run tsc/build pass → commit
+- 16:40 [P2-7] ✅ 完了 (commit c5055cf)
+
+## P2-8 Stripe Webhook 署名検証の最終確認
+
+- 16:45 stripe listen 動作確認: account.updated / capability.updated イベントを受信 → 200 返却
+- 16:45 [確認] Webhook 署名検証: constructEvent + rawBody + stripe-signature ヘッダー ✓
+- 16:45 [確認] 冪等性: stripeEvents.get(processed?) → handler → set(processed:true) パターン ✓
+- 16:45 [確認] ハンドラ分岐: account.updated / checkout.session.completed (purchase/invoice_payment) ✓
+- 16:45 [P2-8] ✅ 完了 (コード変更なし、既存実装の最終検証のみ)
+
+## P2-9 デプロイ準備 + 社長確認
+
