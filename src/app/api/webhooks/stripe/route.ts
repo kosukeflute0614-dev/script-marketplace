@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 import { handlePurchaseWebhook } from "@/app/actions/purchase";
+import { handleInvoicePaymentWebhook } from "@/app/actions/invoice";
 import type Stripe from "stripe";
 
 // Next.js Route Handler の設定
@@ -146,8 +147,15 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       `[stripe-webhook] purchase completed script=${metadata.scriptId} buyer=${metadata.buyerUid}`,
     );
   } else if (type === "invoice_payment") {
-    // P2-6 で実装
-    console.log("[stripe-webhook] invoice_payment completed (handler deferred to P2-6)");
+    await handleInvoicePaymentWebhook({
+      invoiceId: metadata.invoiceId ?? "",
+      chatId: metadata.chatId ?? "",
+      creatorUid: metadata.creatorUid ?? "",
+      payerUid: metadata.payerUid ?? "",
+      amount: metadata.amount ?? "0",
+      platformFee: metadata.platformFee ?? "0",
+    });
+    console.log(`[stripe-webhook] invoice payment completed invoice=${metadata.invoiceId}`);
   } else {
     console.warn(`[stripe-webhook] checkout.session.completed with unknown type: ${type}`);
   }

@@ -127,3 +127,14 @@
 - 16:00 [修正] Critical (冪等チェック順序): stripeEvents を handler 成功後に書き込むよう変更
 - 16:00 [修正] Medium (purchased-list URL): 短縮URL形式に + Webhook遅延注釈追加
 - 16:00 [P2-5] 再レビュー開始
+- 16:10 [P2-5] 台本詳細ページの購入ボタンを実装に置き換え (commit 3085ad7)
+- 16:10 [P2-5] 再レビュー開始
+- 16:15 [P2-5] 再レビュー完了: Critical 0 / High 0 → クリーン
+- 16:15 [P2-5] ブラウザテストは B-2 方式 (Stripe Checkout 到達確認のみ、実決済はスキップ)
+- 16:15 [P2-5] ✅ 完了 (commits 34eea60 / 3085ad7)
+
+## P2-6 都度請求 (createInvoice / payInvoice / Webhook)
+
+- 16:30 [実装] invoice.ts (createInvoice/payInvoice/cancelInvoice/getInvoicesByChat/handleInvoicePaymentWebhook)
+- 16:30 [実装] webhook route.ts に invoice_payment ハンドラ配線
+- 16:30 npm run lint/tsc/build pass → commit
