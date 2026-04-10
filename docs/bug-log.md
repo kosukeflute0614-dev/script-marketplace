@@ -136,6 +136,7 @@
   - @browser-tester は P1-6 時に placeholder PDF で動作確認済みだったが、その時はたまたまクライアント JS のみで動作していた可能性（SSR パスとの競合タイミング依存）
   - `react-pdf` + Next.js App Router の `ssr: false` 必須パターンは公式ドキュメントに明記されているが見落とした
 - **再発防止**: ブラウザ専用ライブラリ（pdfjs-dist, canvas 系, WebGL 系）を使う場合は必ず `dynamic({ ssr: false })` で Client Component から読み込む
+- **追加修正 (2回目)**: `ssr: false` + webpack alias (`canvas: false`) でも解消せず。根本原因は `pdfjs-dist` **v5** と Next.js 15 webpack のモジュール初期化の非互換。`react-pdf` を v10 → **v9** にダウングレードし `pdfjs-dist` を v5 → **v4** に戻すことで解消。Worker URL も `.mjs` → `.js` に変更
 
 ---
 
