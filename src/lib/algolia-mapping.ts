@@ -11,7 +11,8 @@ export type AlgoliaScriptRecord = {
   title: string;
   slug: string;
   synopsis: string;
-  authorUid: string;
+  // 注意: authorUid は内部 UID のため Algolia レコードには含めない
+  // 公開識別子として authorUserId のみを公開する
   authorUserId: string;
   authorDisplayName: string;
   genres: string[];
@@ -63,7 +64,6 @@ export function scriptToAlgoliaRecord(
     title: doc.title ?? "",
     slug: doc.slug ?? "",
     synopsis: doc.synopsis ?? "",
-    authorUid: doc.authorUid ?? "",
     authorUserId: doc.authorUserId ?? "",
     authorDisplayName: doc.authorDisplayName ?? "",
     genres: doc.genres ?? [],

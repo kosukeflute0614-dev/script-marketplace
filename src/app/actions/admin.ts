@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
+import { removeScriptFromAlgolia } from "@/lib/algolia-sync";
 import type { ScriptDoc } from "@/types/script";
 
 import type { ActionResult } from "./auth";
@@ -194,6 +195,7 @@ export async function updateTopPageSections(
 
 /**
  * 強制非公開化。spec.md §1-13 forceUnlistScript。
+ * Firestore の status を unlisted にし、Algolia インデックスからも削除する。
  */
 export async function forceUnlistScript(scriptId: string): Promise<ActionResult> {
   return adminGuard(
@@ -205,11 +207,13 @@ export async function forceUnlistScript(scriptId: string): Promise<ActionResult>
           status: "unlisted",
           updatedAt: FieldValue.serverTimestamp(),
         });
-        return { success: true as const };
       } catch (err) {
         console.error("[forceUnlistScript] failed", err);
         return { success: false as const, error: "強制非公開化に失敗しました" };
       }
+      // Algolia から削除 (失敗しても throw しない設計)
+      await removeScriptFromAlgolia(scriptId);
+      return { success: true as const };
     })(),
   );
 }

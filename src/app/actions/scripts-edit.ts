@@ -514,12 +514,19 @@ export async function updateScriptPdf(
       createdAt: FieldValue.serverTimestamp(),
     });
     await batch.commit();
-    // TODO(後続): 購入者への「台本が更新されました」通知 (P2-7 で wire up)
-    return { success: true, data: { version: newVersion } };
   } catch (err) {
     console.error("[updateScriptPdf] failed", err);
     return { success: false, error: "PDF 差し替えに失敗しました" };
   }
+
+  // Algolia 同期 (currentVersion / updatedAt の反映)
+  const fresh = await ref.get();
+  if (fresh.exists) {
+    await syncScriptToAlgolia(fresh.data() as ScriptDoc, scriptId);
+  }
+  // TODO(後続): 購入者への「台本が更新されました」通知 (P2-7 で wire up)
+
+  return { success: true, data: { version: newVersion } };
 }
 
 // ----------------------------------------------------------------------------
