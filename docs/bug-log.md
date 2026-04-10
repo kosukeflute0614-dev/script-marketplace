@@ -160,5 +160,37 @@
 
 ---
 
+## BUG-010: 購入済み台本ページで Firestore 複合インデックス不足 (500)
+
+- **発見日**: 2026-04-10
+- **発見者**: 社長（実機確認）
+- **ページ**: `/mypage/purchased`
+- **エラー**: `9 FAILED_PRECONDITION: The query requires an index` (purchases.buyerUid + createdAt desc)
+- **原因**: `getMyPurchases()` が `purchases.where("buyerUid").orderBy("createdAt", "desc")` を使うが複合インデックスが未定義。BUG-002 と同じパターンの再発
+- **修正**: `firestore.indexes.json` に `purchases.buyerUid + createdAt desc` を追加 + deploy。ついでに `purchases.authorUid + createdAt desc` と `invoices.chatId + createdAt desc` も予防的に追加
+- **なぜテストで防げなかったか**:
+  - BUG-002 で Firestore インデックス不足を経験済みなのに、P2-5 の `getMyPurchases` 実装時にインデックス追加を忘れた
+  - `where` + `orderBy` が異なるフィールドの複合クエリ = インデックス必須、というルールが毎回チェックされていない
+  - @browser-tester は P2-5 のブラウザテストを B-2 方式でスキップしたため、このページが実際にデータ入りで叩かれなかった
+- **再発防止**: Server Action に `where().orderBy()` を書いたら、その場で `firestore.indexes.json` に追加する。チェックリスト化
+
+---
+
+## BUG-011: Stripe Embedded Onboarding 完了後に stripeOnboarded が false のまま
+
+- **発見日**: 2026-04-10
+- **発見者**: 社長（実機確認）
+- **ページ**: `/author/stripe-setup`
+- **症状**: Stripe フォームで「設定完了」が出てリロードすると「オンボーディングを再開する」に戻る
+- **原因**: `setOnExit` コールバックが即座に `syncStripeAccountStatus` を呼ぶが、Stripe 側のステータス反映に数秒の遅延がある。同期時点では `charges_enabled` / `details_submitted` / `payouts_enabled` がまだ `false` → `stripeOnboarded: false` が Firestore に書き込まれる
+- **修正**: `setOnExit` 後に 2秒→4秒→6秒 の3回リトライで `syncStripeAccountStatus` を呼び、`stripeOnboarded: true` を確認するまで待つ方式に変更
+- **なぜテストで防げなかったか**:
+  - @browser-tester は B-2 方式で Stripe フォーム入力自体をスキップしたため、`setOnExit` の挙動をテストしていない
+  - Stripe API のステータス反映遅延は実際にオンボーディングを完了しないと再現しない
+  - 自動テストでは Stripe のテストモードでも実際のアカウント状態遷移を追うのが困難
+- **再発防止**: 外部 API のステータス変更後に同期する場合はリトライ付きポーリングを標準パターンとする
+
+---
+
 ## (以下、社長の動作確認で新たに発見されたバグを追記)
 
