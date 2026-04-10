@@ -74,3 +74,36 @@
 - 13:05 [P2-2] TC-5〜9 再テスト開始
 - 13:15 [P2-2] TC-5/6/7/8/9 全 PASS → P2-2 全 TC PASS → 修正なし → ✅ 完了
 - 13:15 [P2-3] フルレビュー開始 (前回未実施だったため)
+- 13:25 [P2-3] フルレビュー完了: Critical 1 / High 2 / Medium 2 / Low 2
+  - C: forceUnlistScript で Algolia 削除されない → admin.ts に removeScriptFromAlgolia 配線
+  - H1: updateScriptPdf で Algolia 同期しない → 配線追加
+  - H2: authorUid が Algolia に漏洩 → AlgoliaScriptRecord から削除
+- 13:30 [修正] 上記 + Algolia インデックスを clear → 再構築 (authorUid 完全除去)
+- 13:30 [P2-3] 検証: Algolia レコード sample fields に authorUid 不在を確認 ✓
+- 13:35 [P2-3] 再レビュー開始
+- 13:40 [P2-3] 再レビュー完了: Critical 0 / High 0 → クリーン
+- 13:40 [P2-3] ブラウザテストはスキップ (Algolia は backend 専用、UI は P2-4 で検証)
+- 13:40 [P2-3] ✅ 完了 (commit adcfc80)
+- 13:40 [P2-1〜P2-3 再走完了] B方針による厳密ループ実施完了
+- 13:40 [P2-4] 検索画面 (InstantSearch + 全フィルター) 着手
+- 14:00 [実装] search-provider / search-box / search-hits / search-filters / search-sort / search-stats / search-pagination / mobile-filter-sheet / search page
+- 14:00 [実装] search.ts Server Actions (saveSearch / getSavedSearches / deleteSavedSearch)
+- 14:00 npm run lint/tsc/build 全 pass
+- 14:00 [P2-4] フルレビュー開始
+- 14:10 [P2-4] フルレビュー完了: Critical 1 / High 1 / Medium 3 / Low 3
+  - C: status:published フィルターなし → Configure filters 追加
+  - H: saveSearch レース → runTransaction 化
+  - M: sort aria-label, inline style → 修正
+- 14:15 [修正] 上記 + status-filter.tsx 新規作成
+- 14:15 [P2-4] 再レビュー開始
+- 14:20 [P2-4] 再レビュー完了: Critical 0 / High 0 → クリーン
+- 14:20 [P2-4] ブラウザテスト開始
+- 14:40 [P2-4] テスト結果: TC-2/6/8 PASS, TC-1/3/4/5/7 FAIL
+  - BUG-A: NumericRange (castMax/feeScheduleMin) がデフォルトでフィルタ適用 → 18件→4件に
+  - BUG-B: Image fill の overflow-hidden 欠落 → ページ全体をカード画像が覆って操作不能
+  - BUG-C: ジャンルボタンの selected 状態が URL 初期値で反映されない
+- 14:45 [修正]
+  - BUG-A: NumericRange → NumericFacetGroup (キャスト人数をプリセット範囲に、上演料は一旦削除)
+  - BUG-B: 画像コンテナに overflow-hidden 追加 (search-hits + script-card)
+  - BUG-C: (SSR/hydration 起因、追加修正なし — BUG-A の修正で全件表示されればフィルター状態も安定する見込み)
+- 14:50 npm run lint/tsc/build 全 pass → commit して再テスト

@@ -25,7 +25,7 @@ export function ScriptCard({ script }: Props) {
   return (
     <Link href={href} className="block">
       <Card className="hover:bg-muted/40 h-full overflow-hidden p-0 transition-colors">
-        <div className="bg-card relative aspect-[16/9] w-full">
+        <div className="bg-card relative aspect-[16/9] w-full overflow-hidden">
           {script.thumbnailUrl ? (
             <Image
               src={script.thumbnailUrl}
