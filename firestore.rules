@@ -132,5 +132,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+
+    // ----- stripeEvents (Webhook 冪等性確保用) -----
+    // Server Actions / Webhook handler のみが Admin SDK で書き込み
+    match /stripeEvents/{eventId} {
+      allow read, write: if false;
+    }
   }
 }
