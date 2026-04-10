@@ -51,6 +51,7 @@ export async function createConnectAccount(): Promise<ActionResult<{ clientSecre
         accountId = recovered.id;
         console.log(`[createConnectAccount] recovered orphan account ${accountId} for uid=${me.uid}`);
       } else {
+        const isLocalDev = APP_URL.startsWith("http://localhost");
         const account = await stripe.accounts.create({
           type: "express",
           country: "JP",
@@ -61,21 +62,13 @@ export async function createConnectAccount(): Promise<ActionResult<{ clientSecre
           },
           business_type: "individual",
           metadata: { uid: me.uid },
-          // ユーザーが迷わないように事前入力できるフィールドを埋めておく
           business_profile: {
-            // MCC 5815: デジタルコンテンツ（メディア・書籍・音楽）
             mcc: "5815",
-            // Stripe は localhost URL を拒否するため、開発時はプレースホルダーを使う
-            // 本番デプロイ時に実際の URL に差し替える
-            url: APP_URL.startsWith("http://localhost")
-              ? "https://script-marketplace.example.com"
-              : APP_URL,
+            // Stripe は localhost や example.com を valid URL として受け付けない。
+            // 本番 URL がある場合のみ url を設定する。開発時は省略（Stripe フォームで手入力になる）。
+            ...(isLocalDev ? {} : { url: APP_URL }),
             product_description:
               "脚本マーケットで演劇台本（PDF）の販売および上演許可料の決済を行っています。",
-          },
-          individual: {
-            email: me.email,
-            first_name_kanji: me.displayName,
           },
         });
         accountId = account.id;
