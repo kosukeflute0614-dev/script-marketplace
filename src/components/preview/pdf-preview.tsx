@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-// pdf.js v4 の Web Worker は CDN 配信版を使う
-// v4 は .mjs ではなく .js を使う
+// pdf.js v4 の Web Worker は CDN 配信版を使う (.mjs が正しい拡張子)
 if (typeof window !== "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 }
 
 type Props = {
