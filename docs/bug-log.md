@@ -192,5 +192,16 @@
 
 ---
 
+## BUG-012: Stripe accounts.create で localhost / example.com が URL として拒否される
+
+- **発見日**: 2026-04-10
+- **発見者**: デバッグ修正モードで特定
+- **ページ**: `/author/stripe-setup`
+- **原因**: `business_profile.url` に `http://localhost:3000` → Stripe 拒否。`https://script-marketplace.example.com` → 予約ドメインのため同じく拒否
+- **修正**: 開発時 (`localhost`) は `url` フィールド自体を省略。本番時のみ実 URL を設定
+- **なぜテストで防げなかったか**: Stripe API のバリデーションは実際にアカウントを作成しないと分からない。テスト環境固有の問題
+
+---
+
 ## (以下、社長の動作確認で新たに発見されたバグを追記)
 
