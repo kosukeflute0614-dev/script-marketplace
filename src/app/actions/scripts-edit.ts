@@ -5,6 +5,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb, getAdminStorage } from "@/lib/firebase-admin";
 import { requireUser } from "@/lib/auth-server";
 import { generateSlug, slugCandidates } from "@/lib/slug";
+import { removeScriptFromAlgolia, syncScriptToAlgolia } from "@/lib/algolia-sync";
 import { GENRES, PERFORMANCE_TYPES, TARGET_AUDIENCES } from "@/lib/script-tags";
 import {
   INITIAL_SCRIPT_STATS,
@@ -319,11 +320,18 @@ export async function createScript(formData: FormData): Promise<ActionResult<{ i
       createdAt: FieldValue.serverTimestamp(),
     });
     await batch.commit();
-    return { success: true, data: { id: scriptId } };
   } catch (err) {
     console.error("[createScript] failed", err);
     return { success: false, error: "出品の保存に失敗しました" };
   }
+
+  // Algolia 同期 (失敗しても出品自体は成功扱い)
+  const fresh = await scriptRef.get();
+  if (fresh.exists) {
+    await syncScriptToAlgolia(fresh.data() as ScriptDoc, scriptId);
+  }
+
+  return { success: true, data: { id: scriptId } };
 }
 
 // ----------------------------------------------------------------------------
@@ -442,11 +450,18 @@ export async function updateScript(
 
   try {
     await ref.update(update);
-    return { success: true };
   } catch (err) {
     console.error("[updateScript] failed", err);
     return { success: false, error: "更新に失敗しました" };
   }
+
+  // Algolia 同期
+  const fresh = await ref.get();
+  if (fresh.exists) {
+    await syncScriptToAlgolia(fresh.data() as ScriptDoc, scriptId);
+  }
+
+  return { success: true };
 }
 
 // ----------------------------------------------------------------------------
@@ -530,11 +545,22 @@ async function setStatus(scriptId: string, status: "published" | "unlisted"): Pr
       status,
       updatedAt: FieldValue.serverTimestamp(),
     });
-    return { success: true };
   } catch (err) {
     console.error(`[setStatus(${status})] failed`, err);
     return { success: false, error: "ステータス変更に失敗しました" };
   }
+
+  // Algolia 同期
+  if (status === "published") {
+    const fresh = await ref.get();
+    if (fresh.exists) {
+      await syncScriptToAlgolia(fresh.data() as ScriptDoc, scriptId);
+    }
+  } else {
+    await removeScriptFromAlgolia(scriptId);
+  }
+
+  return { success: true };
 }
 
 export async function unlistScript(scriptId: string): Promise<ActionResult> {
