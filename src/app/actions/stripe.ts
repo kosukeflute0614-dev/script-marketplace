@@ -22,7 +22,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
  *
  * 戻り値: onboardingUrl
  */
-export async function createConnectAccount(): Promise<ActionResult<{ url: string }>> {
+export async function createConnectAccount(): Promise<ActionResult<{ clientSecret: string; accountId: string }>> {
   let me;
   try {
     me = await requireUser();
@@ -74,15 +74,21 @@ export async function createConnectAccount(): Promise<ActionResult<{ url: string
       );
     }
 
-    // 2. オンボーディング URL を発行
-    const accountLink = await stripe.accountLinks.create({
+    // 2. Embedded Onboarding 用の Account Session を作成
+    const accountSession = await stripe.accountSessions.create({
       account: accountId,
-      refresh_url: `${APP_URL}/author/stripe-setup?refresh=1`,
-      return_url: `${APP_URL}/author/stripe-setup?completed=1`,
-      type: "account_onboarding",
+      components: {
+        account_onboarding: { enabled: true },
+      },
     });
 
-    return { success: true, data: { url: accountLink.url } };
+    return {
+      success: true,
+      data: {
+        clientSecret: accountSession.client_secret,
+        accountId,
+      },
+    };
   } catch (err) {
     console.error("[createConnectAccount] failed", err);
     return { success: false, error: "Stripe 連携の開始に失敗しました" };
