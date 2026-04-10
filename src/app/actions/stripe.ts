@@ -221,3 +221,52 @@ export async function syncStripeAccountStatus(): Promise<
     return { success: false, error: "Stripe アカウント状態の同期に失敗しました" };
   }
 }
+
+/**
+ * 【テスト専用】Stripe 連携をリセットする。
+ *
+ * - Stripe 上の Connected Account を削除
+ * - Firestore の stripeAccountId / stripeOnboarded をクリア
+ *
+ * 本番では使用しない。開発中にオンボーディングフローを繰り返しテストするための機能。
+ */
+export async function resetStripeConnection(): Promise<ActionResult> {
+  if (process.env.NODE_ENV === "production") {
+    return { success: false, error: "本番環境では実行できません" };
+  }
+  let me;
+  try {
+    me = await requireUser();
+  } catch {
+    return { success: false, error: "ログインが必要です" };
+  }
+  const db = getAdminDb();
+  const userRef = db.collection("users").doc(me.uid);
+  const userSnap = await userRef.get();
+  const userData = userSnap.data() as UserDoc | undefined;
+
+  // Stripe アカウントがあれば削除を試みる
+  if (userData?.stripeAccountId) {
+    try {
+      const stripe = getStripe();
+      await stripe.accounts.del(userData.stripeAccountId);
+      console.log(`[resetStripeConnection] deleted Stripe account ${userData.stripeAccountId}`);
+    } catch (err) {
+      // 既に削除済み等のエラーは無視
+      console.warn("[resetStripeConnection] Stripe account delete failed (may already be deleted)", err);
+    }
+  }
+
+  // Firestore をクリア
+  try {
+    await userRef.update({
+      stripeAccountId: FieldValue.delete(),
+      stripeOnboarded: false,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("[resetStripeConnection] failed", err);
+    return { success: false, error: "リセットに失敗しました" };
+  }
+}

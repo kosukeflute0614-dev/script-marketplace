@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   createConnectAccount,
   getConnectDashboardUrl,
+  resetStripeConnection,
   syncStripeAccountStatus,
 } from "@/app/actions/stripe";
 
@@ -95,6 +96,19 @@ export function StripeSetupCard({ stripeOnboarded, hasStripeAccount }: Props) {
     });
   }
 
+  function handleReset() {
+    if (!window.confirm("Stripe 連携をリセットします。テスト用です。よろしいですか？")) return;
+    startTransition(async () => {
+      const result = await resetStripeConnection();
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Stripe 連携をリセットしました");
+      router.refresh();
+    });
+  }
+
   if (stripeOnboarded) {
     return (
       <Card>
@@ -105,9 +119,14 @@ export function StripeSetupCard({ stripeOnboarded, hasStripeAccount }: Props) {
           <p className="text-muted-foreground text-sm">
             出品・売上の受取が可能な状態です。
           </p>
-          <Button onClick={openDashboard} disabled={isPending}>
-            <ExternalLinkIcon /> Express ダッシュボードを開く
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={openDashboard} disabled={isPending}>
+              <ExternalLinkIcon /> Express ダッシュボードを開く
+            </Button>
+            <Button onClick={handleReset} variant="destructive" size="sm" disabled={isPending}>
+              🧪 リセット（テスト用）
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
