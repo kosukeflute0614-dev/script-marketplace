@@ -36,6 +36,11 @@ export function SiteHeader({ user }: SiteHeaderProps) {
           </Link>
           {user ? (
             <>
+              {user.stripeOnboarded ? (
+                <Link href="/author/scripts" className="text-muted-foreground hover:text-foreground">
+                  出品管理
+                </Link>
+              ) : null}
               <Link href="/mypage" className="text-muted-foreground hover:text-foreground">
                 マイページ
               </Link>

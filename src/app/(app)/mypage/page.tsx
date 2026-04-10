@@ -38,6 +38,40 @@ export default async function MyPage() {
         <Button asChild>
           <Link href="/profile/edit">プロフィールを編集</Link>
         </Button>
+        {user.stripeOnboarded ? (
+          <>
+            <Button asChild>
+              <Link href="/author/scripts">出品管理</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/author/scripts/new">新規出品</Link>
+            </Button>
+          </>
+        ) : (
+          <Button asChild variant="outline">
+            <Link href="/author/stripe-setup">出品を始める（Stripe連携）</Link>
+          </Button>
+        )}
+        <Button asChild variant="outline">
+          <Link href="/mypage/purchased">購入済み台本</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/mypage/favorites">お気に入り</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/mypage/consultations">相談管理</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/chat">メッセージ</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/mypage/settings/notifications">通知設定</Link>
+        </Button>
+        {user.isAdmin ? (
+          <Button asChild variant="outline">
+            <Link href="/admin">管理画面</Link>
+          </Button>
+        ) : null}
         <form action={signOutAction}>
           <Button type="submit" variant="outline">
             ログアウト

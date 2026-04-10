@@ -59,6 +59,20 @@ export function MobileNav({ user }: Props) {
 
           {user ? (
             <>
+              {user.stripeOnboarded ? (
+                <>
+                  <NavLink href="/author/scripts" onClick={close}>
+                    出品管理
+                  </NavLink>
+                  <NavLink href="/author/scripts/new" onClick={close}>
+                    新規出品
+                  </NavLink>
+                </>
+              ) : (
+                <NavLink href="/author/stripe-setup" onClick={close}>
+                  出品を始める（Stripe連携）
+                </NavLink>
+              )}
               <NavLink href="/mypage" onClick={close}>
                 マイページ
               </NavLink>
